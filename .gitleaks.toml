@@ -1,0 +1,16 @@
+title = "Quest-Log gitleaks config"
+
+[extend]
+useDefault = true
+
+# Zusätzlich: Zuweisung eines Schlüssels als String-Literal, z. B. api_key = "…"
+[[rules]]
+id = "quoted-secret-assignment"
+description = "Mögliches Geheimnis als String-Literal (api_key, token, secret, password)"
+regex = '''(?i)(api[_-]?key|api[_-]?token|access[_-]?token|secret|passwor[dt]|client[_-]?secret)["']?\s*[:=]\s*["'][A-Za-z0-9_\-\.\/\+=]{12,}["']'''
+keywords = ["api_key", "apikey", "api-key", "token", "secret", "password", "passwort"]
+
+[allowlist]
+description = "Platzhalter in Beispieldateien"
+regexes = ['''(?i)(changeme|placeholder|example|your[_-]?(key|token|secret)|xxx+)''']
+paths = ['''\.env\.example$''']

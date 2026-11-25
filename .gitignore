@@ -1,0 +1,92 @@
+# ===== Vertrauliches – niemals einchecken =====
+# Lokale Spezifikation und Notizen (werden per Hand an Claude Code übergeben)
+docs/private/
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Zugangsdaten, Schlüssel, Zertifikate
+.env
+.env.*
+!.env.example
+*.env
+*.pem
+*.key
+*.p12
+*.pfx
+*.jks
+*.keystore
+key.properties
+**/android/key.properties
+google-services.json
+GoogleService-Info.plist
+*.mobileprovision
+secrets/
+credentials*.json
+
+# Lokale Daten, Exporte, Backups (können echte Kundendaten enthalten)
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.backup
+*.bak
+# (nur im Hauptordner, damit Code-Ordner wie app/lib/data/ nicht betroffen sind)
+/exports/
+/backups/
+/data/
+/server/data/
+*.har
+*.log
+
+# ===== Flutter / Dart =====
+.dart_tool/
+.packages
+.pub-cache/
+.pub/
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+**/generated_plugin_registrant.*
+coverage/
+
+# Android
+**/android/.gradle/
+**/android/captures/
+**/android/local.properties
+**/android/**/GeneratedPluginRegistrant.java
+**/android/app/debug/
+**/android/app/profile/
+**/android/app/release/
+*.apk
+*.aab
+
+# iOS / macOS
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+**/ios/Runner.xcworkspace/xcuserdata/
+**/macos/Runner.xcworkspace/xcuserdata/
+xcuserdata/
+DerivedData/
+
+# Windows / Linux
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+
+# ===== Go =====
+server/bin/
+server/tmp/
+*.exe
+*.test
+*.out
+vendor/
+
+# ===== Editor / System =====
+.idea/
+*.iml
+.vscode/*
+!.vscode/extensions.json
+.DS_Store
+Thumbs.db
+*.swp
