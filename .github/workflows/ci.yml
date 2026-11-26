@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Feste Flutter-Version, damit CI und lokale Prüfung übereinstimmen.
+  # Beim Update hier und lokal gemeinsam anheben.
+  FLUTTER_VERSION: "3.41.4"
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -82,11 +87,11 @@ jobs:
       # Flutter direkt aus dem offiziellen Repository statt über eine Action:
       # subosito/flutter-action referenziert actions/cache per Tag, was die
       # Action-Richtlinie des Repositorys ablehnt.
-      - name: Flutter installieren (stable)
+      - name: Flutter ${{ env.FLUTTER_VERSION }} installieren
         shell: bash
         working-directory: ${{ runner.temp }}
         run: |
-          git clone --depth 1 --branch stable https://github.com/flutter/flutter.git flutter
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - run: flutter --version
         shell: bash
@@ -114,11 +119,11 @@ jobs:
       # Flutter direkt aus dem offiziellen Repository statt über eine Action:
       # subosito/flutter-action referenziert actions/cache per Tag, was die
       # Action-Richtlinie des Repositorys ablehnt.
-      - name: Flutter installieren (stable)
+      - name: Flutter ${{ env.FLUTTER_VERSION }} installieren
         shell: bash
         working-directory: ${{ runner.temp }}
         run: |
-          git clone --depth 1 --branch stable https://github.com/flutter/flutter.git flutter
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - run: flutter --version
         shell: bash
@@ -164,11 +169,11 @@ jobs:
       # Flutter direkt aus dem offiziellen Repository statt über eine Action:
       # subosito/flutter-action referenziert actions/cache per Tag, was die
       # Action-Richtlinie des Repositorys ablehnt.
-      - name: Flutter installieren (stable)
+      - name: Flutter ${{ env.FLUTTER_VERSION }} installieren
         shell: bash
         working-directory: ${{ runner.temp }}
         run: |
-          git clone --depth 1 --branch stable https://github.com/flutter/flutter.git flutter
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
           echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
       - run: flutter --version
         shell: bash
