@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../core/database/app_database.dart';
 import '../../../core/database/database_provider.dart';
+import '../../../core/settings/time_settings.dart';
 import '../engine/time_math.dart';
 
 /// Quick-start categories: one tap starts a timer.
@@ -18,6 +19,7 @@ enum QuickStartKind {
   final TaskSource? source;
 
   static String? labelFor(String? name) {
+    if (name == 'internal') return 'Intern';
     for (final k in values) {
       if (k.name == name) return k.label;
     }
@@ -310,6 +312,19 @@ class TimeRepository {
     );
   });
 
+  /// Records a past break on the clock of [span]'s day (used when a gap
+  /// is assigned as a break).
+  Future<void> addClockPause(TimeSpan span) async {
+    final row = await _clockRow(span.start);
+    if (row == null) return;
+    final pauses = _decodePauses(row.pauses)..add((span.start, span.end));
+    pauses.sort((a, b) => a.$1.compareTo(b.$1));
+    await _writePauses(row.id, pauses);
+  }
+
+  /// Starts today's work clock without starting a timer.
+  Future<void> startDay() => ensureClock(_now());
+
   // Timers
 
   Future<void> _startInternal(
@@ -523,10 +538,45 @@ class TimeRepository {
     double backgroundWeight = 0.5,
     int aeMinutes = 10,
   }) async {
-    final from = DateTime(month.year, month.month);
-    final to = DateTime(month.year, month.month + 1);
+    final (from, to) = _monthRange(month);
+    return _customerAe(
+      await entriesBetween(from, to),
+      customerId,
+      backgroundWeight: backgroundWeight,
+      aeMinutes: aeMinutes,
+    );
+  }
+
+  Stream<int> watchCustomerMonthAe(
+    String customerId,
+    DateTime month, {
+    double backgroundWeight = 0.5,
+    int aeMinutes = 10,
+  }) {
+    final (from, to) = _monthRange(month);
+    final q = _entryQuery()..where(_overlaps(from, to));
+    return q.watch().map(
+      (rows) => _customerAe(
+        rows.map(_toEntryView).toList(),
+        customerId,
+        backgroundWeight: backgroundWeight,
+        aeMinutes: aeMinutes,
+      ),
+    );
+  }
+
+  (DateTime, DateTime) _monthRange(DateTime month) => (
+    DateTime(month.year, month.month),
+    DateTime(month.year, month.month + 1),
+  );
+
+  int _customerAe(
+    List<EntryView> all,
+    String customerId, {
+    required double backgroundWeight,
+    required int aeMinutes,
+  }) {
     final now = _now();
-    final all = await entriesBetween(from, to);
     final spans = all.map((v) => v.toSpan(now)).toList();
     final alloc = allocate(spans, backgroundWeight: backgroundWeight);
     final buckets = <String, Duration>{};
@@ -570,3 +620,19 @@ final taskEntriesProvider = StreamProvider.autoDispose
       (ref, taskId) =>
           ref.watch(timeRepositoryProvider).watchTaskEntries(taskId),
     );
+
+/// Work units used by a customer in the current month.
+final customerMonthAeProvider = StreamProvider.autoDispose.family<int, String>((
+  ref,
+  customerId,
+) {
+  final settings = ref.watch(currentTimeSettingsProvider);
+  return ref
+      .watch(timeRepositoryProvider)
+      .watchCustomerMonthAe(
+        customerId,
+        DateTime.now(),
+        backgroundWeight: settings.backgroundWeight,
+        aeMinutes: settings.aeMinutes,
+      );
+});
