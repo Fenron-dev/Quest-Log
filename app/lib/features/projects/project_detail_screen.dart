@@ -7,6 +7,7 @@ import '../../core/routing/router.dart';
 import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
+import '../../core/ui/text_prompt_dialog.dart';
 import 'data/projects_repository.dart';
 import 'project_tile.dart';
 import '../tasks/data/tasks_repository.dart';
@@ -38,38 +39,11 @@ class ProjectDetailScreen extends ConsumerWidget {
   }
 }
 
-Future<String?> _askText(BuildContext context, String title, String label) {
-  final controller = TextEditingController();
-  return showDialog<String>(
-    context: context,
-    builder: (context) {
-      void submit() {
-        final text = controller.text.trim();
-        Navigator.pop(context, text.isEmpty ? null : text);
-      }
-
-      return AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: label,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) => submit(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(onPressed: submit, child: const Text('Hinzufügen')),
-        ],
-      );
-    },
-  ).whenComplete(controller.dispose);
-}
+Future<String?> _askText(
+  BuildContext context,
+  String title,
+  String label,
+) async => (await showTextPrompt(context, title: title, label: label))?.text;
 
 class _ProjectDetail extends ConsumerWidget {
   const _ProjectDetail({required this.overview});

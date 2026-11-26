@@ -6,6 +6,7 @@ import '../../core/database/app_database.dart';
 import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
+import '../../core/ui/text_prompt_dialog.dart';
 import 'data/tasks_repository.dart';
 import 'task_actions.dart';
 
@@ -44,51 +45,14 @@ const _quickStatuses = [
   TaskStatus.dropped,
 ];
 
-Future<(String, bool)?> _askChecklistItem(BuildContext context) {
-  final controller = TextEditingController();
-  var required = false;
-  return showDialog<(String, bool)>(
-    context: context,
-    builder: (context) => StatefulBuilder(
-      builder: (context, setState) {
-        void submit() {
-          final text = controller.text.trim();
-          Navigator.pop(context, text.isEmpty ? null : (text, required));
-        }
-
-        return AlertDialog(
-          title: const Text('Neuer Schritt'),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              TextField(
-                controller: controller,
-                autofocus: true,
-                decoration: const InputDecoration(
-                  labelText: 'Schritt',
-                  border: OutlineInputBorder(),
-                ),
-                onSubmitted: (_) => submit(),
-              ),
-              CheckboxListTile(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Pflichtschritt'),
-                value: required,
-                onChanged: (v) => setState(() => required = v ?? false),
-              ),
-            ],
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.pop(context),
-              child: const Text('Abbrechen'),
-            ),
-            FilledButton(onPressed: submit, child: const Text('Hinzufügen')),
-          ],
-        );
-      },
-    ),
-  ).whenComplete(controller.dispose);
+Future<(String, bool)?> _askChecklistItem(BuildContext context) async {
+  final result = await showTextPrompt(
+    context,
+    title: 'Neuer Schritt',
+    label: 'Schritt',
+    checkboxLabel: 'Pflichtschritt',
+  );
+  return result == null ? null : (result.text, result.checked);
 }
 
 class _TaskDetail extends ConsumerWidget {
