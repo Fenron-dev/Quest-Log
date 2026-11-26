@@ -24,8 +24,13 @@ void main() {
     expect(find.text('Router neu starten'), findsOneWidget);
     expect(find.textContaining('Eingang'), findsWidgets);
 
-    await tester.tap(find.byTooltip('Erledigt'));
+    await tester.tap(find.text('Router neu starten'));
     await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Abschließen'));
+    await settleAsync(tester);
+    expect(find.text('Erfasst: 0:00 h · 0 AE'), findsOneWidget);
+    await tester.tap(find.widgetWithText(FilledButton, 'Abschließen'));
+    await settleAsync(tester);
     expect(find.text('Router neu starten'), findsNothing);
 
     await tester.ensureVisible(find.widgetWithText(ChoiceChip, 'Erledigt'));
@@ -50,8 +55,8 @@ void main() {
     expect(find.textContaining('2/3 Schritte'), findsOneWidget);
 
     // Completing with an open required step asks first.
-    await tester.tap(find.byTooltip('Erledigt').first);
-    await tester.pumpAndSettle();
+    await tester.tap(find.widgetWithText(TextButton, 'Abschließen'));
+    await settleAsync(tester);
     expect(find.text('Pflichtschritte offen'), findsOneWidget);
     await tester.tap(find.text('Abbrechen'));
     await tester.pumpAndSettle();
@@ -80,7 +85,7 @@ void main() {
     await pumpTestApp(tester, db);
     await tester.tap(find.byTooltip('Als Kacheln anzeigen'));
     await tester.pumpAndSettle();
-    expect(find.byType(GridView), findsOneWidget);
+    expect(find.byType(SliverGrid), findsOneWidget);
     expect(await db.readSetting('nowView'), 'tiles');
     await closeTestApp(tester, db);
   });

@@ -14,6 +14,7 @@ import '../../features/tasks/task_detail_screen.dart';
 import '../../features/tasks/task_edit_screen.dart';
 import '../../features/templates/template_edit_screen.dart';
 import '../../features/templates/templates_screen.dart';
+import '../../features/time/start_screen.dart';
 import 'app_shell.dart';
 
 abstract final class AppRoutes {
@@ -42,6 +43,10 @@ GoRouter createRouter({String initialLocation = AppRoutes.now}) {
                   GoRoute(
                     path: 'settings',
                     builder: (context, state) => const SettingsScreen(),
+                  ),
+                  GoRoute(
+                    path: 'start',
+                    builder: (context, state) => const StartScreen(),
                   ),
                 ],
               ),
