@@ -1,0 +1,33 @@
+import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:quest_log/app.dart';
+import 'package:quest_log/core/database/app_database.dart';
+import 'package:quest_log/core/database/database_provider.dart';
+
+/// Pumps the full app on [db] with a phone-sized viewport.
+Future<void> pumpTestApp(WidgetTester tester, AppDatabase db) async {
+  tester.view.physicalSize = const Size(1080, 2400);
+  tester.view.devicePixelRatio = 2.5;
+  addTearDown(tester.view.reset);
+  await tester.pumpWidget(
+    ProviderScope(
+      overrides: [databaseProvider.overrideWithValue(db)],
+      child: const QuestLogApp(),
+    ),
+  );
+  await tester.pumpAndSettle();
+}
+
+/// Disposes the widget tree (and its query streams) and closes [db] inside
+/// the fake-async zone, so no stream cleanup is left pending.
+Future<void> closeTestApp(WidgetTester tester, AppDatabase db) async {
+  await tester.pumpWidget(const SizedBox());
+  await tester.pump(const Duration(seconds: 1));
+  final closing = db.close();
+  await tester.pump(const Duration(seconds: 1));
+  await closing;
+}
+
+Finder navItem(String label) =>
+    find.descendant(of: find.byType(NavigationBar), matching: find.text(label));
