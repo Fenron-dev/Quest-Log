@@ -94,26 +94,28 @@ abstract final class AppTheme {
   }
 
   static ThemeData _build(_Palette p, Color accent) {
-    final isDark = p.brightness == Brightness.dark;
     final onAccent =
         ThemeData.estimateBrightnessForColor(accent) == Brightness.dark
         ? Colors.white
         : Colors.black;
+    // Derive containers and tints from the accent so selections, indicators
+    // and highlights follow it, then pin the exact accent and palette colours.
     final scheme =
-        (isDark ? const ColorScheme.dark() : const ColorScheme.light())
-            .copyWith(
-              primary: accent,
-              onPrimary: onAccent,
-              secondary: accent,
-              onSecondary: onAccent,
-              surface: p.card,
-              onSurface: p.text,
-              onSurfaceVariant: p.mutedText,
-              surfaceContainerLowest: p.background,
-              surfaceContainer: p.card,
-              outline: p.border,
-              outlineVariant: p.border,
-            );
+        ColorScheme.fromSeed(
+          seedColor: accent,
+          brightness: p.brightness,
+          dynamicSchemeVariant: DynamicSchemeVariant.fidelity,
+        ).copyWith(
+          primary: accent,
+          onPrimary: onAccent,
+          surface: p.card,
+          onSurface: p.text,
+          onSurfaceVariant: p.mutedText,
+          surfaceContainerLowest: p.background,
+          surfaceContainer: p.card,
+          outline: p.border,
+          outlineVariant: p.border,
+        );
 
     return ThemeData(
       useMaterial3: true,
@@ -138,7 +140,34 @@ abstract final class AppTheme {
       dividerTheme: DividerThemeData(color: p.border),
       navigationBarTheme: NavigationBarThemeData(
         backgroundColor: p.card,
-        indicatorColor: accent.withValues(alpha: 0.16),
+        indicatorColor: accent,
+        iconTheme: WidgetStateProperty.resolveWith(
+          (states) => IconThemeData(
+            color: states.contains(WidgetState.selected)
+                ? onAccent
+                : p.mutedText,
+          ),
+        ),
+        labelTextStyle: WidgetStateProperty.resolveWith(
+          (states) => TextStyle(
+            fontSize: 12,
+            color: states.contains(WidgetState.selected) ? accent : p.mutedText,
+            fontWeight: states.contains(WidgetState.selected)
+                ? FontWeight.w600
+                : FontWeight.w500,
+          ),
+        ),
+      ),
+      segmentedButtonTheme: SegmentedButtonThemeData(
+        style: ButtonStyle(
+          backgroundColor: WidgetStateProperty.resolveWith(
+            (states) => states.contains(WidgetState.selected) ? accent : null,
+          ),
+          foregroundColor: WidgetStateProperty.resolveWith(
+            (states) =>
+                states.contains(WidgetState.selected) ? onAccent : p.text,
+          ),
+        ),
       ),
     );
   }

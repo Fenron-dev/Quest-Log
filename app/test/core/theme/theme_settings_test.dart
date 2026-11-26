@@ -63,4 +63,20 @@ void main() {
       isNot(light.scaffoldBackgroundColor),
     );
   });
+
+  test('accent drives primary, containers and navigation indicator', () {
+    for (final build in [AppTheme.light, AppTheme.warm, AppTheme.dark]) {
+      final blue = build(AccentChoice.blue);
+      final green = build(AccentChoice.green);
+      expect(green.colorScheme.primary, isNot(blue.colorScheme.primary));
+      expect(
+        green.colorScheme.secondaryContainer,
+        isNot(blue.colorScheme.secondaryContainer),
+      );
+      expect(
+        green.navigationBarTheme.indicatorColor,
+        isNot(blue.navigationBarTheme.indicatorColor),
+      );
+    }
+  });
 }
