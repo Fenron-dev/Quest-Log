@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 
 import '../../core/database/database_provider.dart';
 import '../../core/database/sample_data.dart';
+import '../../core/settings/time_settings.dart';
 import '../../core/settings/view_settings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_settings.dart';
@@ -67,6 +68,21 @@ class SettingsScreen extends ConsumerWidget {
             onSelectionChanged: (s) =>
                 ref.read(nowViewProvider.notifier).set(s.first),
           ),
+          const SizedBox(height: 12),
+          Text('Mein Tag', style: textTheme.labelLarge),
+          const SizedBox(height: 8),
+          SegmentedButton<DayView>(
+            showSelectedIcon: false,
+            segments: [
+              for (final v in DayView.values)
+                ButtonSegment(value: v, label: Text(v.label)),
+            ],
+            selected: {ref.watch(dayViewProvider).value ?? DayView.history},
+            onSelectionChanged: (s) =>
+                ref.read(dayViewProvider.notifier).set(s.first),
+          ),
+          const SizedBox(height: 28),
+          const _TimeSettingsSection(),
           const SizedBox(height: 28),
           Text('Aufgaben', style: textTheme.titleMedium),
           ListTile(
@@ -163,6 +179,68 @@ class _AccentButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _TimeSettingsSection extends ConsumerWidget {
+  const _TimeSettingsSection();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final t = ref.watch(currentTimeSettingsProvider);
+    final notifier = ref.read(timeSettingsProvider.notifier);
+    final textTheme = Theme.of(context).textTheme;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Zeit und Abrechnung', style: textTheme.titleMedium),
+        ListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Länge einer AE'),
+          subtitle: Text('${t.aeMinutes} Minuten'),
+          trailing: DropdownButton<int>(
+            value: t.aeMinutes,
+            items: [
+              for (final m in const [5, 6, 10, 15, 30])
+                DropdownMenuItem(value: m, child: Text('$m min')),
+            ],
+            onChanged: (v) =>
+                v == null ? null : notifier.save(t.copyWith(aeMinutes: v)),
+          ),
+        ),
+        Text(
+          'Gewichtung Nebenher-Zeit: ${t.backgroundWeightPercent} %',
+          style: textTheme.bodyMedium,
+        ),
+        Slider(
+          value: t.backgroundWeightPercent.toDouble(),
+          min: 0,
+          max: 100,
+          divisions: 10,
+          label: '${t.backgroundWeightPercent} %',
+          onChanged: (v) =>
+              notifier.save(t.copyWith(backgroundWeightPercent: v.round())),
+        ),
+        Text(
+          'Läuft ein Timer nebenher parallel zu aktiver Arbeit, zählt seine '
+          'Zeit mit diesem Anteil. Die Summe übersteigt nie die Arbeitszeit.',
+          style: textTheme.bodySmall,
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Beim Starten andere pausieren'),
+          subtitle: const Text('Standard für Schnellstart und „Starten“'),
+          value: t.pauseOthers,
+          onChanged: (v) => notifier.save(t.copyWith(pauseOthers: v)),
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Schnellstart-Leiste auf Jetzt'),
+          value: t.quickStartEnabled,
+          onChanged: (v) => notifier.save(t.copyWith(quickStartEnabled: v)),
+        ),
+      ],
     );
   }
 }

@@ -296,7 +296,7 @@ Future<void> insertSampleData(AppDatabase db) => db.transaction(() async {
     steps: [('Backups kontrollieren', true), ('Updates prüfen', false)],
   );
 
-  await task(
+  final drucker = await task(
     'Drucker im Empfang prüfen',
     customerId: beispiel,
     status: TaskStatus.inProgress,
@@ -308,7 +308,7 @@ Future<void> insertSampleData(AppDatabase db) => db.transaction(() async {
       ('Testseite drucken', true, false),
     ],
   );
-  await task(
+  final laufwerke = await task(
     'Netzlaufwerke umziehen',
     customerId: beispiel,
     projectId: serverumzug,
@@ -335,4 +335,71 @@ Future<void> insertSampleData(AppDatabase db) => db.transaction(() async {
   );
   await task('Rückruf wegen Scanner', status: TaskStatus.inbox);
   await task('Werkzeugkoffer auffüllen', status: TaskStatus.someday);
+
+  // Recorded time of the last three hours, with one unassigned gap, so the
+  // day view and the contingent have something to show.
+  Future<void> entry(
+    Duration fromAgo,
+    Duration toAgo, {
+    String? taskId,
+    String? customerId,
+    String? projectId,
+    String? category,
+    bool background = false,
+  }) => db
+      .into(db.timeEntries)
+      .insert(
+        TimeEntriesCompanion.insert(
+          start: now.subtract(fromAgo),
+          end: Value(now.subtract(toAgo)),
+          taskId: Value(taskId),
+          customerId: Value(customerId),
+          projectId: Value(projectId),
+          category: Value(category),
+          kind: Value(
+            background ? TimeEntryKind.background : TimeEntryKind.active,
+          ),
+          billable: Value(customerId != null),
+        ),
+      );
+
+  final clockStart = now.subtract(const Duration(hours: 3));
+  if (clockStart.day == now.day) {
+    await db
+        .into(db.workClocks)
+        .insert(WorkClocksCompanion.insert(day: today, start: clockStart));
+  }
+  const m = Duration(minutes: 1);
+  await entry(m * 180, m * 140, taskId: drucker, customerId: beispiel);
+  await entry(
+    m * 120,
+    m * 75,
+    taskId: laufwerke,
+    customerId: beispiel,
+    projectId: serverumzug,
+  );
+  // Copying keeps running in the background while a call comes in.
+  await entry(
+    m * 75,
+    m * 40,
+    taskId: laufwerke,
+    customerId: beispiel,
+    projectId: serverumzug,
+    background: true,
+  );
+  await entry(m * 50, m * 35, customerId: muster, category: 'phone');
+  final earlier = today.subtract(const Duration(days: 2));
+  if (earlier.month == today.month) {
+    await db
+        .into(db.timeEntries)
+        .insert(
+          TimeEntriesCompanion.insert(
+            start: earlier.add(const Duration(hours: 9)),
+            end: Value(earlier.add(const Duration(hours: 11, minutes: 30))),
+            customerId: Value(beispiel),
+            taskId: Value(laufwerke),
+            projectId: Value(serverumzug),
+          ),
+        );
+  }
 });

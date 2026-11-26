@@ -7,6 +7,11 @@ import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
 import '../../core/ui/text_prompt_dialog.dart';
+import '../notes/notes_section.dart';
+import '../time/data/time_repository.dart';
+import '../time/engine/time_math.dart';
+import '../time/gap_fill_sheet.dart' show formatTime;
+import '../time/timer_widgets.dart';
 import 'data/tasks_repository.dart';
 import 'task_actions.dart';
 
@@ -94,6 +99,7 @@ class _TaskDetail extends ConsumerWidget {
       appBar: AppBar(
         title: const Text('Aufgabe'),
         actions: [
+          if (!t.status.isClosed) TimerButton(taskId: t.id),
           IconButton(
             tooltip: 'Bearbeiten',
             icon: const Icon(Icons.edit_outlined),
@@ -214,6 +220,8 @@ class _TaskDetail extends ConsumerWidget {
                     ],
                   ),
           ),
+          _TimeSection(taskId: t.id),
+          NotesSection(type: NoteParentType.task, parentId: t.id),
         ],
       ),
     );
@@ -272,6 +280,58 @@ class _ChecklistRow extends ConsumerWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+class _TimeSection extends ConsumerWidget {
+  const _TimeSection({required this.taskId});
+
+  final String taskId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final entries = ref.watch(taskEntriesProvider(taskId)).value ?? const [];
+    if (entries.isEmpty) {
+      return const Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          SectionHeader('Zeit'),
+          Padding(
+            padding: EdgeInsets.symmetric(horizontal: 16),
+            child: Text('Noch keine Zeit erfasst'),
+          ),
+        ],
+      );
+    }
+    final now = DateTime.now();
+    final total = entries.fold(
+      Duration.zero,
+      (sum, e) => sum + (e.entry.end ?? now).difference(e.entry.start),
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader('Zeit · ${formatHm(total)} h erfasst'),
+        for (final e in entries.reversed.take(10))
+          ListTile(
+            dense: true,
+            leading: Icon(
+              e.isRunning
+                  ? Icons.play_arrow
+                  : e.entry.kind == TimeEntryKind.background
+                  ? Icons.layers_outlined
+                  : Icons.schedule,
+            ),
+            title: Text(
+              '${formatDate(e.entry.start)} · ${formatTime(e.entry.start)}–'
+              '${e.entry.end == null ? 'läuft' : formatTime(e.entry.end!)}',
+            ),
+            trailing: Text(
+              formatHm((e.entry.end ?? now).difference(e.entry.start)),
+            ),
+          ),
+      ],
     );
   }
 }
