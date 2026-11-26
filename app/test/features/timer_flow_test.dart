@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:drift/drift.dart' hide isNull, isNotNull;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -148,6 +150,54 @@ void main() {
     await settleAsync(tester);
     expect(find.text('Kabel bestellen'), findsOneWidget);
     expect(find.text('Antippen zum Starten'), findsOneWidget);
+    await closeTestApp(tester, db);
+  });
+
+  testWidgets('running time keeps counting with the clock', (tester) async {
+    await tester.runAsync(() => planToday(['Angebot']));
+    final clock = StreamController<DateTime>();
+    addTearDown(clock.close);
+    final base = DateTime.now();
+    clock.add(base);
+    await pumpTestApp(tester, db, clock: clock.stream);
+
+    await tester.tap(find.text('Angebot'));
+    await settleAsync(tester);
+
+    final timeText = find.byWidgetPredicate(
+      (w) => w is Text && RegExp(r'^\d+:\d\d:\d\d$').hasMatch(w.data ?? ''),
+    );
+    String shown() => (tester.widget<Text>(timeText)).data!;
+
+    clock.add(base.add(const Duration(minutes: 5, seconds: 30)));
+    await tester.pump();
+    await tester.pump();
+    final first = shown();
+    clock.add(base.add(const Duration(minutes: 7, seconds: 45)));
+    await tester.pump();
+    await tester.pump();
+    final second = shown();
+
+    expect(first, startsWith('0:05:'));
+    expect(second, startsWith('0:07:'));
+
+    await closeTestApp(tester, db);
+  });
+
+  testWidgets('Jetzt switches between tiles and list', (tester) async {
+    await tester.runAsync(() => planToday(['Angebot']));
+    await pumpTestApp(tester, db);
+    expect(find.byType(GridView), findsOneWidget);
+    await tester.tap(find.byTooltip('Als Liste anzeigen'));
+    await settleAsync(tester);
+    expect(find.byType(GridView), findsNothing);
+    expect(find.text('Angebot'), findsOneWidget);
+    expect(await tester.runAsync(() => db.readSetting('jetztView')), 'list');
+
+    // Starting from the list works too and shows live controls.
+    await tester.tap(find.text('Angebot'));
+    await settleAsync(tester);
+    expect(find.text('Fertig'), findsOneWidget);
     await closeTestApp(tester, db);
   });
 }

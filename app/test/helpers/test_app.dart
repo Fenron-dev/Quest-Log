@@ -11,6 +11,7 @@ Future<void> pumpTestApp(
   WidgetTester tester,
   AppDatabase db, {
   DateTime? now,
+  Stream<DateTime>? clock,
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
@@ -20,7 +21,9 @@ Future<void> pumpTestApp(
       overrides: [
         databaseProvider.overrideWithValue(db),
         // A fixed clock: a periodic ticker would keep pumpAndSettle busy.
-        nowProvider.overrideWith((ref) => Stream.value(now ?? DateTime.now())),
+        nowProvider.overrideWith(
+          (ref) => clock ?? Stream.value(now ?? DateTime.now()),
+        ),
       ],
       child: const QuestLogApp(),
     ),
