@@ -12,9 +12,15 @@ void main() {
 
   testWidgets('navigates between tabs and opens settings', (tester) async {
     await pumpTestApp(tester, db);
-    expect(find.widgetWithText(AppBar, 'Jetzt'), findsOneWidget);
+    expect(find.text('Nichts läuft'), findsOneWidget);
 
-    for (final label in ['Mein Tag', 'Projekte', 'Kunden']) {
+    await tester.tap(find.text('Mein Tag'));
+    await settleAsync(tester);
+    expect(find.text('Heute'), findsOneWidget);
+    await tester.tap(find.text('Jetzt').first);
+    await settleAsync(tester);
+
+    for (final label in ['Aufgaben', 'Projekte', 'Kunden']) {
       await tester.tap(navItem(label));
       await tester.pumpAndSettle();
       expect(find.widgetWithText(AppBar, label), findsOneWidget);

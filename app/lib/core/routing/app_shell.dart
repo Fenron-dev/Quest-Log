@@ -22,9 +22,9 @@ class AppShell extends StatelessWidget {
             label: 'Jetzt',
           ),
           NavigationDestination(
-            icon: Icon(Icons.today_outlined),
-            selectedIcon: Icon(Icons.today),
-            label: 'Mein Tag',
+            icon: Icon(Icons.checklist_outlined),
+            selectedIcon: Icon(Icons.checklist),
+            label: 'Aufgaben',
           ),
           NavigationDestination(
             icon: Icon(Icons.folder_outlined),

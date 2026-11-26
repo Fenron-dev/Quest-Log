@@ -18,15 +18,11 @@ Future<void> toggleTimer(
   WidgetRef ref,
   String taskId, {
   required bool running,
-  bool? pauseOthers,
 }) async {
   final repo = ref.read(timeRepositoryProvider);
   if (!running) {
-    await repo.start(
-      taskId,
-      pauseOthers:
-          pauseOthers ?? ref.read(currentTimeSettingsProvider).pauseOthers,
-    );
+    // Timers run in parallel; nothing else is paused.
+    await repo.start(taskId);
     return;
   }
   final toResume = await repo.pause(taskId);
@@ -47,6 +43,42 @@ Future<void> toggleTimer(
         ),
       ),
     );
+}
+
+/// Asks whether running active timers should pause while a quick-start
+/// timer runs. Returns null if cancelled; no question if nothing runs.
+Future<bool?> askPauseOthers(BuildContext context, WidgetRef ref) async {
+  final running = await ref.read(timeRepositoryProvider).watchRunning().first;
+  final active = running
+      .where((r) => r.entry.kind == TimeEntryKind.active)
+      .toList();
+  if (active.isEmpty || !context.mounted) return false;
+  final preferPause = ref.read(currentTimeSettingsProvider).pauseOthers;
+  final names = active.map((r) => '• ${r.title}').join('\n');
+  return showDialog<bool>(
+    context: context,
+    builder: (context) {
+      final pauseButton = preferPause ? FilledButton.new : TextButton.new;
+      final parallelButton = preferPause ? TextButton.new : FilledButton.new;
+      return AlertDialog(
+        title: const Text('Andere Timer pausieren?'),
+        content: Text(
+          'Es laufen:\n$names\n\nSollen sie für diesen Zeitraum pausieren? '
+          'Danach kannst du sie mit einem Tipp fortsetzen.',
+        ),
+        actions: [
+          parallelButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Weiterlaufen lassen'),
+          ),
+          pauseButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Pausieren'),
+          ),
+        ],
+      );
+    },
+  );
 }
 
 /// Ids of tasks whose timer is currently running.
@@ -120,14 +152,11 @@ class QuickStartBar extends ConsumerWidget {
         children: [
           for (final k in QuickStartKind.values)
             button(_icons[k]!, k.label, () async {
+              final pauseOthers = await askPauseOthers(context, ref);
+              if (pauseOthers == null) return;
               await ref
                   .read(timeRepositoryProvider)
-                  .quickStart(
-                    k,
-                    pauseOthers: ref
-                        .read(currentTimeSettingsProvider)
-                        .pauseOthers,
-                  );
+                  .quickStart(k, pauseOthers: pauseOthers);
               if (!context.mounted) return;
               ScaffoldMessenger.of(context)
                 ..hideCurrentSnackBar()

@@ -12,6 +12,7 @@ import '../../features/projects/projects_screen.dart';
 import '../../features/settings/settings_screen.dart';
 import '../../features/tasks/task_detail_screen.dart';
 import '../../features/tasks/task_edit_screen.dart';
+import '../../features/tasks/tasks_screen.dart';
 import '../../features/templates/template_edit_screen.dart';
 import '../../features/templates/templates_screen.dart';
 import '../../features/time/start_screen.dart';
@@ -19,7 +20,8 @@ import 'app_shell.dart';
 
 abstract final class AppRoutes {
   static const now = '/now';
-  static const myDay = '/my-day';
+  static const myDay = '/day';
+  static const tasks = '/tasks';
   static const projects = '/projects';
   static const customers = '/customers';
   static const settings = '/settings';
@@ -50,13 +52,17 @@ GoRouter createRouter({String initialLocation = AppRoutes.now}) {
                   ),
                 ],
               ),
+              GoRoute(
+                path: AppRoutes.myDay,
+                builder: (context, state) => const MyDayScreen(),
+              ),
             ],
           ),
           StatefulShellBranch(
             routes: [
               GoRoute(
-                path: AppRoutes.myDay,
-                builder: (context, state) => const MyDayScreen(),
+                path: AppRoutes.tasks,
+                builder: (context, state) => const TasksScreen(),
               ),
             ],
           ),
@@ -121,7 +127,7 @@ GoRouter createRouter({String initialLocation = AppRoutes.now}) {
         ],
       ),
       GoRoute(
-        path: '/tasks/:id',
+        path: '/task/:id',
         builder: (context, state) =>
             TaskDetailScreen(taskId: state.pathParameters['id']!),
         routes: [

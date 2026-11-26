@@ -56,7 +56,7 @@ class SettingsScreen extends ConsumerWidget {
           const SizedBox(height: 28),
           Text('Standard-Ansichten', style: textTheme.titleMedium),
           const SizedBox(height: 8),
-          Text('Jetzt', style: textTheme.labelLarge),
+          Text('Aufgaben', style: textTheme.labelLarge),
           const SizedBox(height: 8),
           SegmentedButton<NowView>(
             showSelectedIcon: false,
@@ -229,8 +229,10 @@ class _TimeSettingsSection extends ConsumerWidget {
         ),
         SwitchListTile(
           contentPadding: EdgeInsets.zero,
-          title: const Text('Beim Starten andere pausieren'),
-          subtitle: const Text('Standard für Schnellstart und „Starten“'),
+          title: const Text('Andere Timer pausieren vorschlagen'),
+          subtitle: const Text(
+            'Vorauswahl bei der Nachfrage der Schnelltasten und auf „Starten“',
+          ),
           value: t.pauseOthers,
           onChanged: (v) => notifier.save(t.copyWith(pauseOthers: v)),
         ),

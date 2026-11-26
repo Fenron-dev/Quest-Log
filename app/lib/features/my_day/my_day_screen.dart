@@ -6,11 +6,12 @@ import '../../core/settings/view_settings.dart';
 import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
-import '../tasks/task_actions.dart';
+import '../now/now_day_header.dart';
 import '../time/data/time_repository.dart';
 import '../time/day_bar.dart';
 import '../time/day_summary.dart';
 import '../time/engine/time_math.dart';
+import '../time/entry_edit_sheet.dart';
 import '../time/gap_fill_sheet.dart';
 
 class MyDayScreen extends ConsumerStatefulWidget {
@@ -63,87 +64,106 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
     }
 
     return Scaffold(
-      appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+      body: SafeArea(
+        child: Column(
           children: [
-            const Text('Mein Tag'),
-            if (summary != null)
-              Text(
-                '${summary.ae} AE · ${formatHm(summary.recorded)} h · '
-                'davon abrechenbar ${formatHm(summary.billable)} h',
-                style: textTheme.bodySmall,
+            const Padding(
+              padding: EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: NowDayHeader(showingDay: true),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 8, 0),
+              child: Row(
+                children: [
+                  IconButton(
+                    tooltip: 'Vorheriger Tag',
+                    icon: const Icon(Icons.chevron_left),
+                    onPressed: () => setState(
+                      () => _selectedDay = dayOf(
+                        day.subtract(const Duration(hours: 12)),
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: InkWell(
+                      onTap: pickDay,
+                      child: Column(
+                        children: [
+                          Text(
+                            isToday ? 'Heute' : formatDate(day),
+                            style: textTheme.titleMedium,
+                          ),
+                          if (summary != null)
+                            Text(
+                              '${summary.ae} AE · ${formatHm(summary.recorded)} h · '
+                              'davon abrechenbar ${formatHm(summary.billable)} h',
+                              style: textTheme.bodySmall,
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Nächster Tag',
+                    icon: const Icon(Icons.chevron_right),
+                    onPressed: isToday
+                        ? null
+                        : () => setState(
+                            () => _selectedDay = dayOf(
+                              day.add(const Duration(hours: 36)),
+                            ),
+                          ),
+                  ),
+                ],
               ),
+            ),
+            Expanded(
+              child: summary == null
+                  ? const Center(child: CircularProgressIndicator())
+                  : ListView(
+                      padding: const EdgeInsets.only(bottom: 32),
+                      children: [
+                        if (isToday) _ClockCard(summary: summary),
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+                          child: DayBar(summary: summary, now: now),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                          child: SegmentedButton<DayView>(
+                            showSelectedIcon: false,
+                            segments: [
+                              for (final v in DayView.values)
+                                ButtonSegment(value: v, label: Text(v.label)),
+                            ],
+                            selected: {view},
+                            onSelectionChanged: (s) =>
+                                ref.read(dayViewProvider.notifier).set(s.first),
+                          ),
+                        ),
+                        if (summary.entries.isEmpty && summary.gaps.isEmpty)
+                          const Padding(
+                            padding: EdgeInsets.only(top: 24),
+                            child: EmptyState(
+                              icon: Icons.today_outlined,
+                              message:
+                                  'Noch nichts erfasst. Starte einen Timer auf '
+                                  '„Jetzt“ – die Arbeitsuhr läuft dann automatisch.',
+                            ),
+                          )
+                        else if (view == DayView.history)
+                          ..._historyRows(context, summary, now)
+                        else
+                          _Timeline(summary: summary, now: now),
+                      ],
+                    ),
+            ),
           ],
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Vorheriger Tag',
-            icon: const Icon(Icons.chevron_left),
-            onPressed: () => setState(
-              () =>
-                  _selectedDay = dayOf(day.subtract(const Duration(hours: 12))),
-            ),
-          ),
-          TextButton(
-            onPressed: pickDay,
-            child: Text(isToday ? 'Heute' : formatDate(day)),
-          ),
-          IconButton(
-            tooltip: 'Nächster Tag',
-            icon: const Icon(Icons.chevron_right),
-            onPressed: isToday
-                ? null
-                : () => setState(
-                    () => _selectedDay = dayOf(
-                      day.add(const Duration(hours: 36)),
-                    ),
-                  ),
-          ),
-        ],
       ),
-      body: summary == null
-          ? const Center(child: CircularProgressIndicator())
-          : ListView(
-              padding: const EdgeInsets.only(bottom: 32),
-              children: [
-                if (isToday) _ClockCard(summary: summary),
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                  child: DayBar(summary: summary, now: now),
-                ),
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
-                  child: SegmentedButton<DayView>(
-                    showSelectedIcon: false,
-                    segments: [
-                      for (final v in DayView.values)
-                        ButtonSegment(value: v, label: Text(v.label)),
-                    ],
-                    selected: {view},
-                    onSelectionChanged: (s) =>
-                        ref.read(dayViewProvider.notifier).set(s.first),
-                  ),
-                ),
-                if (summary.entries.isEmpty && summary.gaps.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.only(top: 24),
-                    child: EmptyState(
-                      icon: Icons.today_outlined,
-                      message:
-                          'Noch nichts erfasst. Starte einen Timer auf '
-                          '„Jetzt“ – die Arbeitsuhr läuft dann automatisch.',
-                    ),
-                  )
-                else if (view == DayView.history)
-                  ..._historyRows(context, summary, now)
-                else
-                  _Timeline(summary: summary, now: now),
-              ],
-            ),
     );
   }
 
@@ -308,43 +328,7 @@ class _EntryTile extends ConsumerWidget {
           Text(formatHm(allocated)),
         ],
       ),
-      onTap: () => _showEntryActions(context, ref),
-    );
-  }
-
-  Future<void> _showEntryActions(BuildContext context, WidgetRef ref) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      showDragHandle: true,
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (view.task != null)
-              ListTile(
-                leading: const Icon(Icons.open_in_new),
-                title: const Text('Aufgabe öffnen'),
-                onTap: () {
-                  Navigator.pop(sheetContext);
-                  openTask(context, view.task!.id);
-                },
-              ),
-            if (!view.isRunning)
-              ListTile(
-                leading: const Icon(Icons.delete_outline),
-                title: const Text('Zeiteintrag löschen'),
-                onTap: () async {
-                  Navigator.pop(sheetContext);
-                  if (await confirmDelete(context, 'Zeiteintrag')) {
-                    await ref
-                        .read(timeRepositoryProvider)
-                        .deleteEntry(view.entry.id);
-                  }
-                },
-              ),
-          ],
-        ),
-      ),
+      onTap: () => showEntryEditSheet(context, view),
     );
   }
 }

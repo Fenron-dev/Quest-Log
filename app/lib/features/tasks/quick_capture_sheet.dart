@@ -13,21 +13,32 @@ Future<void> showQuickCapture(
   BuildContext context, {
   String? customerId,
   String? projectId,
+  bool planToday = false,
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) =>
-        _QuickCaptureSheet(customerId: customerId, projectId: projectId),
+    builder: (_) => _QuickCaptureSheet(
+      customerId: customerId,
+      projectId: projectId,
+      planToday: planToday,
+    ),
   );
 }
 
 class _QuickCaptureSheet extends ConsumerStatefulWidget {
-  const _QuickCaptureSheet({this.customerId, this.projectId});
+  const _QuickCaptureSheet({
+    this.customerId,
+    this.projectId,
+    this.planToday = false,
+  });
 
   final String? customerId;
   final String? projectId;
+
+  /// Plans the new task for today so it appears on Jetzt.
+  final bool planToday;
 
   @override
   ConsumerState<_QuickCaptureSheet> createState() => _QuickCaptureSheetState();
@@ -48,7 +59,18 @@ class _QuickCaptureSheetState extends ConsumerState<_QuickCaptureSheet> {
     if (text.isEmpty || _busy) return;
     setState(() => _busy = true);
     final repo = ref.read(tasksRepositoryProvider);
-    if (widget.projectId == null) {
+    if (widget.planToday) {
+      final now = DateTime.now();
+      await repo.createTask(
+        TasksCompanion.insert(
+          title: text,
+          customerId: Value(widget.customerId),
+          projectId: Value(widget.projectId),
+          status: const Value(TaskStatus.planned),
+          plannedDay: Value(DateTime(now.year, now.month, now.day)),
+        ),
+      );
+    } else if (widget.projectId == null) {
       await repo.capture(text, customerId: widget.customerId);
     } else {
       await repo.createTask(
@@ -100,7 +122,10 @@ class _QuickCaptureSheetState extends ConsumerState<_QuickCaptureSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text('Erfassen', style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            widget.planToday ? 'Neue Aufgabe für heute' : 'Erfassen',
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 12),
           TextField(
             controller: _title,
