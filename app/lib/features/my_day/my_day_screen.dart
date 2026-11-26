@@ -7,6 +7,9 @@ import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
 import '../now/now_day_header.dart';
+import '../tasks/appointment_sheet.dart';
+import '../tasks/data/tasks_repository.dart';
+import '../tasks/task_actions.dart';
 import '../time/data/time_repository.dart';
 import '../time/day_bar.dart';
 import '../time/day_summary.dart';
@@ -33,6 +36,13 @@ class _EntryRow extends _Row {
   DateTime get start => view.entry.start;
 }
 
+class _AppointmentRow extends _Row {
+  _AppointmentRow(this.view);
+  final TaskView view;
+  @override
+  DateTime get start => view.task.plannedDay!;
+}
+
 class _GapRow extends _Row {
   _GapRow(this.gap);
   final TimeSpan gap;
@@ -51,6 +61,8 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
     final summary = ref.watch(daySummaryProvider(day));
     final now = ref.watch(currentNowProvider);
     final view = ref.watch(dayViewProvider).value ?? DayView.history;
+    final appointments =
+        ref.watch(dayAppointmentsProvider(day)).value ?? const <TaskView>[];
     final textTheme = Theme.of(context).textTheme;
 
     Future<void> pickDay() async {
@@ -58,7 +70,7 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
         context: context,
         initialDate: day,
         firstDate: DateTime(2000),
-        lastDate: today,
+        lastDate: today.add(const Duration(days: 365)),
       );
       if (picked != null) setState(() => _selectedDay = dayOf(picked));
     }
@@ -106,13 +118,11 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                   IconButton(
                     tooltip: 'Nächster Tag',
                     icon: const Icon(Icons.chevron_right),
-                    onPressed: isToday
-                        ? null
-                        : () => setState(
-                            () => _selectedDay = dayOf(
-                              day.add(const Duration(hours: 36)),
-                            ),
-                          ),
+                    onPressed: () => setState(
+                      () => _selectedDay = dayOf(
+                        day.add(const Duration(hours: 36)),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -126,7 +136,11 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                         if (isToday) _ClockCard(summary: summary),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-                          child: DayBar(summary: summary, now: now),
+                          child: DayBar(
+                            summary: summary,
+                            now: now,
+                            appointments: appointments,
+                          ),
                         ),
                         Padding(
                           padding: const EdgeInsets.symmetric(
@@ -144,20 +158,28 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                                 ref.read(dayViewProvider.notifier).set(s.first),
                           ),
                         ),
-                        if (summary.entries.isEmpty && summary.gaps.isEmpty)
+                        if (view == DayView.timeline)
+                          _Timeline(
+                            summary: summary,
+                            now: now,
+                            appointments: appointments,
+                          )
+                        else if (summary.entries.isEmpty &&
+                            summary.gaps.isEmpty &&
+                            appointments.isEmpty)
                           const Padding(
                             padding: EdgeInsets.only(top: 24),
                             child: EmptyState(
                               icon: Icons.today_outlined,
                               message:
                                   'Noch nichts erfasst. Starte einen Timer auf '
-                                  '„Jetzt“ – die Arbeitsuhr läuft dann automatisch.',
+                                  '„Jetzt“ – die Arbeitsuhr läuft dann '
+                                  'automatisch. Im Zeitstrahl planst du '
+                                  'Termine per Tipp auf eine freie Stelle.',
                             ),
                           )
-                        else if (view == DayView.history)
-                          ..._historyRows(context, summary, now)
                         else
-                          _Timeline(summary: summary, now: now),
+                          ..._historyRows(context, summary, now, appointments),
                       ],
                     ),
             ),
@@ -171,10 +193,12 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
     BuildContext context,
     DaySummary summary,
     DateTime now,
+    List<TaskView> appointments,
   ) {
     final rows = <_Row>[
       for (final e in summary.entries) _EntryRow(e),
       for (final g in summary.gaps) _GapRow(g),
+      for (final a in appointments) _AppointmentRow(a),
     ]..sort((a, b) => a.start.compareTo(b.start));
     return [
       for (final r in rows)
@@ -185,6 +209,7 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
             now: now,
           ),
           _GapRow(:final gap) => _GapTile(gap: gap, summary: summary),
+          _AppointmentRow(:final view) => _AppointmentTile(view: view),
         },
     ];
   }
@@ -317,18 +342,31 @@ class _EntryTile extends ConsumerWidget {
       title: Text(view.title),
       subtitle: Text('$line2\n$line3'),
       isThreeLine: true,
-      trailing: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        crossAxisAlignment: CrossAxisAlignment.end,
+      trailing: Row(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '${exactAe(allocated, aeMinutes: summary.aeMinutes).toStringAsFixed(1)} AE',
-            style: const TextStyle(fontWeight: FontWeight.w600),
+          Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Text(
+                '${exactAe(allocated, aeMinutes: summary.aeMinutes).toStringAsFixed(1)} AE',
+                style: const TextStyle(fontWeight: FontWeight.w600),
+              ),
+              Text(formatHm(allocated)),
+            ],
           ),
-          Text(formatHm(allocated)),
+          IconButton(
+            tooltip: 'Zeiteintrag bearbeiten',
+            icon: const Icon(Icons.edit_outlined),
+            onPressed: () => showEntryEditSheet(context, view),
+          ),
         ],
       ),
-      onTap: () => showEntryEditSheet(context, view),
+      onTap: view.task != null
+          ? () => openTask(context, view.task!.id)
+          : () => showEntryEditSheet(context, view),
+      onLongPress: () => showEntryEditSheet(context, view),
     );
   }
 }
@@ -364,18 +402,63 @@ class _GapTile extends StatelessWidget {
   }
 }
 
-/// Vertical timeline: one row per hour, entries and gaps as blocks.
-class _Timeline extends StatelessWidget {
-  const _Timeline({required this.summary, required this.now});
+/// Vertical timeline: one row per hour. Entries and appointments open
+/// their task; tapping free space plans an appointment or adds time.
+class _Timeline extends ConsumerWidget {
+  const _Timeline({
+    required this.summary,
+    required this.now,
+    required this.appointments,
+  });
 
   final DaySummary summary;
   final DateTime now;
+  final List<TaskView> appointments;
 
   static const _hourHeight = 64.0;
+  static const _labelWidth = 40.0;
+
+  Future<void> _onFreeSlot(BuildContext context, DateTime at) async {
+    final canBackfill = at.isBefore(now);
+    await showModalBottomSheet<void>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheet) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.event_outlined),
+              title: Text('Termin planen um ${formatTime(at)}'),
+              onTap: () {
+                Navigator.pop(sheet);
+                showAppointmentSheet(context, at: at);
+              },
+            ),
+            if (canBackfill)
+              ListTile(
+                leading: const Icon(Icons.more_time),
+                title: Text('Zeit nachtragen ab ${formatTime(at)}'),
+                onTap: () {
+                  Navigator.pop(sheet);
+                  final end = at.add(const Duration(minutes: 30));
+                  showGapFillSheet(
+                    context,
+                    gap: TimeSpan(at, end.isAfter(now) ? now : end),
+                    dayEntries: summary.entries,
+                    title: 'Zeit nachtragen',
+                  );
+                },
+              ),
+          ],
+        ),
+      ),
+    );
+  }
 
   @override
-  Widget build(BuildContext context) {
-    final (from, to) = visibleHours(summary, now);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final (from, to) = visibleHours(summary, now, appointments: appointments);
     final start = summary.day.add(Duration(hours: from));
     final scheme = Theme.of(context).colorScheme;
     double y(DateTime t) =>
@@ -409,36 +492,61 @@ class _Timeline extends StatelessWidget {
         height: (to - from) * _hourHeight + 8,
         child: LayoutBuilder(
           builder: (context, c) {
-            const labelWidth = 40.0;
-            final width = c.maxWidth - labelWidth;
+            final width = c.maxWidth - _labelWidth;
             final laneWidth = width / laneCount;
             return Stack(
               children: [
-                for (var h = from; h <= to; h++)
-                  Positioned(
-                    top: (h - from) * _hourHeight,
-                    left: 0,
-                    right: 0,
-                    child: Row(
-                      children: [
-                        SizedBox(
-                          width: labelWidth,
-                          child: Text(
-                            '$h:00',
-                            style: Theme.of(context).textTheme.labelSmall,
+                // Free space: tap to plan or backfill at that time.
+                Positioned.fill(
+                  left: _labelWidth,
+                  child: GestureDetector(
+                    key: const Key('timeline-free-space'),
+                    behavior: HitTestBehavior.opaque,
+                    onTapUp: (d) {
+                      final minutes = (d.localPosition.dy / _hourHeight * 60)
+                          .floor();
+                      final rounded = minutes - minutes % 15;
+                      _onFreeSlot(
+                        context,
+                        start.add(Duration(minutes: rounded)),
+                      );
+                    },
+                  ),
+                ),
+                IgnorePointer(
+                  child: Stack(
+                    children: [
+                      for (var h = from; h <= to; h++)
+                        Positioned(
+                          top: (h - from) * _hourHeight,
+                          left: 0,
+                          right: 0,
+                          child: Row(
+                            children: [
+                              SizedBox(
+                                width: _labelWidth,
+                                child: Text(
+                                  '$h:00',
+                                  style: Theme.of(context).textTheme.labelSmall,
+                                ),
+                              ),
+                              Expanded(
+                                child: Divider(
+                                  height: 1,
+                                  color: scheme.outline,
+                                ),
+                              ),
+                            ],
                           ),
                         ),
-                        Expanded(
-                          child: Divider(height: 1, color: scheme.outline),
-                        ),
-                      ],
-                    ),
+                    ],
                   ),
+                ),
                 for (final g in summary.gaps)
                   Positioned(
                     top: y(g.start),
                     height: (y(g.end) - y(g.start)).clamp(2, double.infinity),
-                    left: labelWidth,
+                    left: _labelWidth,
                     width: width,
                     child: InkWell(
                       onTap: () => showGapFillSheet(
@@ -458,6 +566,43 @@ class _Timeline extends StatelessWidget {
                       ),
                     ),
                   ),
+                for (final a in appointments)
+                  Positioned(
+                    top: y(a.task.plannedDay!),
+                    height:
+                        (y(
+                                  a.task.plannedDay!.add(
+                                    Duration(minutes: a.task.estimateMin ?? 30),
+                                  ),
+                                ) -
+                                y(a.task.plannedDay!))
+                            .clamp(20, double.infinity),
+                    left: _labelWidth,
+                    width: width,
+                    child: InkWell(
+                      onTap: () => openTask(context, a.task.id),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: ColorPalette.resolve(a.color),
+                            width: 2,
+                          ),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 6),
+                        alignment: Alignment.topLeft,
+                        child: Text(
+                          '${formatTime(a.task.plannedDay!)} ${a.task.title}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                 for (final e in summary.entries)
                   Positioned(
                     top: y(e.entry.start),
@@ -465,22 +610,28 @@ class _Timeline extends StatelessWidget {
                       4,
                       double.infinity,
                     ),
-                    left: labelWidth + laneOf[e.entry.id]! * laneWidth,
+                    left: _labelWidth + laneOf[e.entry.id]! * laneWidth,
                     width: laneWidth - 2,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: ColorPalette.resolve(e.color),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
-                      child: Text(
-                        e.title,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: ColorPalette.onColor(
-                            ColorPalette.resolve(e.color),
+                    child: GestureDetector(
+                      onTap: e.task != null
+                          ? () => openTask(context, e.task!.id)
+                          : () => showEntryEditSheet(context, e),
+                      onLongPress: () => showEntryEditSheet(context, e),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: ColorPalette.resolve(e.color),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 4),
+                        child: Text(
+                          e.title,
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: ColorPalette.onColor(
+                              ColorPalette.resolve(e.color),
+                            ),
                           ),
                         ),
                       ),
@@ -489,14 +640,45 @@ class _Timeline extends StatelessWidget {
                 if (dayOf(now) == summary.day)
                   Positioned(
                     top: y(now),
-                    left: labelWidth - 4,
+                    left: _labelWidth - 4,
                     right: 0,
-                    child: Container(height: 2, color: scheme.error),
+                    child: IgnorePointer(
+                      child: Container(height: 2, color: scheme.error),
+                    ),
                   ),
               ],
             );
           },
         ),
+      ),
+    );
+  }
+}
+
+class _AppointmentTile extends StatelessWidget {
+  const _AppointmentTile({required this.view});
+
+  final TaskView view;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = view.task;
+    final color = ColorPalette.resolve(view.color);
+    final end = t.plannedDay!.add(Duration(minutes: t.estimateMin ?? 30));
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        border: Border.all(color: color, width: 2),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: ListTile(
+        leading: Icon(Icons.event, color: color),
+        title: Text(t.title),
+        subtitle: Text(
+          '${formatTime(t.plannedDay!)}–${formatTime(end)} · Termin'
+          '${view.customer == null ? '' : ' · ${view.customer!.name}'}',
+        ),
+        onTap: () => openTask(context, t.id),
       ),
     );
   }

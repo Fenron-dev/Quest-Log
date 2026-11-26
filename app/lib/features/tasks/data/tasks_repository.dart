@@ -67,6 +67,11 @@ class TaskValidationException implements Exception {
 
 DateTime _dayOf(DateTime d) => DateTime(d.year, d.month, d.day);
 
+/// A task planned at a specific time of day is an appointment.
+bool isAppointment(Task t) =>
+    t.plannedDay != null &&
+    (t.plannedDay!.hour != 0 || t.plannedDay!.minute != 0);
+
 class TaskView {
   const TaskView({
     required this.task,
@@ -190,6 +195,24 @@ class TasksRepository {
             followUpDue,
       );
     return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
+  /// Open tasks planned on [day] at a specific time (appointments).
+  Stream<List<TaskView>> watchAppointments(DateTime day) {
+    final t = _db.tasks;
+    final from = _dayOf(day);
+    final to = from.add(const Duration(days: 1));
+    final query = _viewQuery()
+      ..where(
+        t.plannedDay.isBiggerOrEqualValue(from) &
+            t.plannedDay.isSmallerThanValue(to) &
+            t.status.isNotIn([TaskStatus.dropped.name]),
+      );
+    return query.watch().map(
+      (rows) =>
+          rows.map(_toView).where((v) => isAppointment(v.task)).toList()
+            ..sort((a, b) => a.task.plannedDay!.compareTo(b.task.plannedDay!)),
+    );
   }
 
   /// The next open task planned (or due) after [today].
@@ -487,3 +510,8 @@ final focusTasksProvider = StreamProvider.autoDispose
 final nextUpProvider = StreamProvider.autoDispose.family<TaskView?, DateTime>(
   (ref, today) => ref.watch(tasksRepositoryProvider).watchNextUp(today),
 );
+
+final dayAppointmentsProvider = StreamProvider.autoDispose
+    .family<List<TaskView>, DateTime>(
+      (ref, day) => ref.watch(tasksRepositoryProvider).watchAppointments(day),
+    );

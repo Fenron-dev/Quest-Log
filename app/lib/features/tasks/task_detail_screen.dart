@@ -80,7 +80,12 @@ class _TaskDetail extends ConsumerWidget {
       if (view.customer != null) (Icons.business_outlined, view.customer!.name),
       if (view.project != null) (Icons.folder_outlined, view.project!.name),
       if (t.plannedDay != null)
-        (Icons.today_outlined, 'Geplant für ${formatDate(t.plannedDay!)}'),
+        (
+          isAppointment(t) ? Icons.event : Icons.today_outlined,
+          isAppointment(t)
+              ? 'Termin am ${formatDate(t.plannedDay!)} um ${formatTime(t.plannedDay!)}'
+              : 'Geplant für ${formatDate(t.plannedDay!)}',
+        ),
       if (t.due != null) (Icons.event_outlined, 'Fällig ${formatDate(t.due!)}'),
       if (t.estimateMin != null)
         (Icons.timer_outlined, 'Schätzung ${t.estimateMin} min'),
