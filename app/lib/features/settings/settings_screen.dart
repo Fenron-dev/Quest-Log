@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../../core/database/database_provider.dart';
 import '../../core/database/sample_data.dart';
+import '../../core/settings/view_settings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_settings.dart';
+import '../templates/templates_screen.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -50,6 +53,31 @@ class SettingsScreen extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 28),
+          Text('Standard-Ansichten', style: textTheme.titleMedium),
+          const SizedBox(height: 8),
+          Text('Jetzt', style: textTheme.labelLarge),
+          const SizedBox(height: 8),
+          SegmentedButton<NowView>(
+            showSelectedIcon: false,
+            segments: [
+              for (final v in NowView.values)
+                ButtonSegment(value: v, label: Text(v.label)),
+            ],
+            selected: {ref.watch(nowViewProvider).value ?? NowView.list},
+            onSelectionChanged: (s) =>
+                ref.read(nowViewProvider.notifier).set(s.first),
+          ),
+          const SizedBox(height: 28),
+          Text('Aufgaben', style: textTheme.titleMedium),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            leading: const Icon(Icons.bolt),
+            title: const Text('Vorlagen'),
+            subtitle: const Text('Titelmuster, Checklisten, Favoriten'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push(templatesRoute),
+          ),
+          const SizedBox(height: 20),
           Text('Daten', style: textTheme.titleMedium),
           const SizedBox(height: 8),
           OutlinedButton.icon(
@@ -61,8 +89,8 @@ class SettingsScreen extends ConsumerWidget {
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(
                   content: Text(
-                    'Beispieldaten geladen: Kunden und Projekte sind jetzt '
-                    'gefüllt.',
+                    'Beispieldaten geladen: Kunden, Projekte, Aufgaben und '
+                    'Vorlagen sind jetzt gefüllt.',
                   ),
                 ),
               );
@@ -70,8 +98,8 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 4),
           Text(
-            'Fügt erfundene Kunden, Kontakte und Projekte zum Ausprobieren '
-            'hinzu.',
+            'Fügt erfundene Kunden, Kontakte, Projekte, Aufgaben und '
+            'Vorlagen zum Ausprobieren hinzu.',
             style: textTheme.bodySmall,
           ),
         ],

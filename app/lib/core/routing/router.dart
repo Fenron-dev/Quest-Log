@@ -10,6 +10,10 @@ import '../../features/projects/project_detail_screen.dart';
 import '../../features/projects/project_edit_screen.dart';
 import '../../features/projects/projects_screen.dart';
 import '../../features/settings/settings_screen.dart';
+import '../../features/tasks/task_detail_screen.dart';
+import '../../features/tasks/task_edit_screen.dart';
+import '../../features/templates/template_edit_screen.dart';
+import '../../features/templates/templates_screen.dart';
 import 'app_shell.dart';
 
 abstract final class AppRoutes {
@@ -108,6 +112,33 @@ GoRouter createRouter({String initialLocation = AppRoutes.now}) {
                 ],
               ),
             ],
+          ),
+        ],
+      ),
+      GoRoute(
+        path: '/tasks/:id',
+        builder: (context, state) =>
+            TaskDetailScreen(taskId: state.pathParameters['id']!),
+        routes: [
+          GoRoute(
+            path: 'edit',
+            builder: (context, state) =>
+                TaskEditScreen(taskId: state.pathParameters['id']!),
+          ),
+        ],
+      ),
+      GoRoute(
+        path: templatesRoute,
+        builder: (context, state) => const TemplatesScreen(),
+        routes: [
+          GoRoute(
+            path: 'new',
+            builder: (context, state) => const TemplateEditScreen(),
+          ),
+          GoRoute(
+            path: ':id',
+            builder: (context, state) =>
+                TemplateEditScreen(templateId: state.pathParameters['id']),
           ),
         ],
       ),

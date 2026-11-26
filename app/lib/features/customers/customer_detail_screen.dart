@@ -8,6 +8,9 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/initials_avatar.dart';
 import '../projects/data/projects_repository.dart';
 import '../projects/project_tile.dart';
+import '../tasks/data/tasks_repository.dart';
+import '../tasks/quick_capture_sheet.dart';
+import '../tasks/task_widgets.dart';
 import 'contact_dialog.dart';
 import 'data/customers_repository.dart';
 
@@ -45,7 +48,7 @@ class _CustomerDetail extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final textTheme = Theme.of(context).textTheme;
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         appBar: AppBar(
           actions: [
@@ -94,6 +97,7 @@ class _CustomerDetail extends ConsumerWidget {
                   tabs: [
                     Tab(text: 'Übersicht'),
                     Tab(text: 'Projekte'),
+                    Tab(text: 'Aufgaben'),
                   ],
                 ),
               ],
@@ -104,6 +108,7 @@ class _CustomerDetail extends ConsumerWidget {
           children: [
             _OverviewTab(customer: customer),
             _ProjectsTab(customer: customer),
+            _TasksTab(customer: customer),
           ],
         ),
       ),
@@ -227,6 +232,49 @@ class _ProjectsTab extends ConsumerWidget {
           : ListView(
               children: [
                 for (final p in list) ProjectTile(p, showCustomer: false),
+                Padding(padding: const EdgeInsets.all(16), child: newButton),
+              ],
+            ),
+    );
+  }
+}
+
+class _TasksTab extends ConsumerWidget {
+  const _TasksTab({required this.customer});
+
+  final Customer customer;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tasks = ref.watch(
+      taskListProvider((
+        filter: TaskFilter.open,
+        customerId: customer.id,
+        projectId: null,
+      )),
+    );
+    final newButton = OutlinedButton.icon(
+      onPressed: () => showQuickCapture(context, customerId: customer.id),
+      icon: const Icon(Icons.add),
+      label: const Text('Aufgabe erfassen'),
+    );
+    return tasks.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (e, _) => Center(child: Text('Fehler: $e')),
+      data: (list) => list.isEmpty
+          ? EmptyState(
+              icon: Icons.task_alt,
+              message: 'Keine offenen Aufgaben für diesen Kunden.',
+              action: newButton,
+            )
+          : ListView(
+              children: [
+                for (final t in list)
+                  TaskListItem(
+                    t,
+                    key: ValueKey(t.task.id),
+                    showCustomer: false,
+                  ),
                 Padding(padding: const EdgeInsets.all(16), child: newButton),
               ],
             ),

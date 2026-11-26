@@ -9,6 +9,9 @@ import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
 import 'data/projects_repository.dart';
 import 'project_tile.dart';
+import '../tasks/data/tasks_repository.dart';
+import '../tasks/quick_capture_sheet.dart';
+import '../tasks/task_widgets.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
@@ -79,6 +82,13 @@ class _ProjectDetail extends ConsumerWidget {
     final repo = ref.read(projectsRepositoryProvider);
     final milestones = ref.watch(milestonesProvider(p.id));
     final criteria = ref.watch(criteriaProvider(p.id));
+    final tasks = ref.watch(
+      taskListProvider((
+        filter: TaskFilter.open,
+        customerId: null,
+        projectId: p.id,
+      )),
+    );
     final color = ColorPalette.resolve(overview.color);
     final textTheme = Theme.of(context).textTheme;
     final period = formatDateRange(p.start, p.due);
@@ -176,6 +186,34 @@ class _ProjectDetail extends ConsumerWidget {
                           key: ValueKey(m.id),
                           milestone: m,
                           index: i,
+                        ),
+                    ],
+                  ),
+          ),
+          SectionHeader(
+            'Offene Aufgaben',
+            trailing: IconButton(
+              tooltip: 'Aufgabe erfassen',
+              icon: const Icon(Icons.add_task),
+              onPressed: () => showQuickCapture(
+                context,
+                customerId: p.customerId,
+                projectId: p.id,
+              ),
+            ),
+          ),
+          tasks.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (e, _) => Text('Fehler: $e'),
+            data: (list) => list.isEmpty
+                ? const ListTile(title: Text('Keine offenen Aufgaben'))
+                : Column(
+                    children: [
+                      for (final t in list)
+                        TaskListItem(
+                          t,
+                          key: ValueKey(t.task.id),
+                          showCustomer: false,
                         ),
                     ],
                   ),
