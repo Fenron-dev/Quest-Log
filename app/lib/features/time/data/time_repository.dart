@@ -506,6 +506,77 @@ class TimeRepository {
 
   Future<void> deleteEntry(String id) => _db.softDelete(_db.timeEntries, id);
 
+  /// Updates a time entry. A running entry keeps `end` null.
+  Future<void> updateEntry(
+    String id, {
+    required DateTime start,
+    required DateTime? end,
+    required String? taskId,
+    required String? customerId,
+    required String? projectId,
+    required TimeEntryKind kind,
+    required bool billable,
+    required String? note,
+  }) async {
+    if (end != null && !end.isAfter(start)) {
+      throw ArgumentError('end must be after start');
+    }
+    await (_db.update(_db.timeEntries)..where((e) => e.id.equals(id))).write(
+      TimeEntriesCompanion(
+        start: Value(start),
+        end: Value(end),
+        taskId: Value(taskId),
+        customerId: Value(customerId),
+        projectId: Value(projectId),
+        kind: Value(kind),
+        billable: Value(billable),
+        note: Value(note),
+        updatedAt: Value(_now()),
+      ),
+    );
+  }
+
+  /// Assigns a task (and all of its time entries) to a customer and
+  /// project, e.g. when a quick-start turns out to belong to a project.
+  Future<void> assignTask(
+    String taskId, {
+    required String? customerId,
+    required String? projectId,
+  }) => _db.transaction(() async {
+    final now = _now();
+    final task = await (_db.select(
+      _db.tasks,
+    )..where((t) => t.id.equals(taskId))).getSingleOrNull();
+    if (task == null) return;
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
+      TasksCompanion(
+        customerId: Value(customerId),
+        projectId: Value(projectId),
+        milestoneId: projectId == task.projectId
+            ? const Value.absent()
+            : const Value(null),
+        updatedAt: Value(now),
+      ),
+    );
+    final hadCustomer = task.customerId != null;
+    await (_db.update(
+      _db.timeEntries,
+    )..where((e) => e.taskId.equals(taskId) & e.deletedAt.isNull())).write(
+      TimeEntriesCompanion(
+        customerId: Value(customerId),
+        projectId: Value(projectId),
+        // Becomes billable when a customer is assigned for the first
+        // time; existing choices are kept otherwise.
+        billable: !hadCustomer && customerId != null
+            ? const Value(true)
+            : customerId == null
+            ? const Value(false)
+            : const Value.absent(),
+        updatedAt: Value(now),
+      ),
+    );
+  });
+
   // Totals
 
   /// Allocated time per task across all days on which it has entries.
