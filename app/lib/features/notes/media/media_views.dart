@@ -175,7 +175,7 @@ class _VideoPageState extends State<_VideoPage> {
       setState(() => _c = c);
       await c.play();
     } catch (_) {
-      // No video backend on some desktop platforms.
+      // Unsupported format or no playback backend.
       if (mounted) {
         setState(
           () =>
@@ -272,7 +272,7 @@ class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
         await p.play();
       }
     } catch (_) {
-      // No playback backend on some desktop platforms.
+      // Unsupported format or no playback backend.
       if (mounted) {
         setState(() => _playing = false);
         ScaffoldMessenger.of(context).showSnackBar(
