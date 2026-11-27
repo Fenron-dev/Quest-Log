@@ -4,10 +4,13 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quest_log/app.dart';
 import 'package:quest_log/core/database/app_database.dart';
 import 'package:quest_log/core/database/database_provider.dart';
+import 'package:quest_log/features/notes/media/media_capture.dart';
+import 'package:quest_log/features/notes/media/media_store.dart';
 import 'package:quest_log/features/reminders/notification_service.dart';
 import 'package:quest_log/features/reminders/reminder_scheduler.dart';
 import 'package:quest_log/features/time/data/time_repository.dart';
 
+import 'fake_media.dart';
 import 'fake_notifications.dart';
 
 /// Pumps the full app on [db] with a phone-sized viewport.
@@ -17,6 +20,8 @@ Future<void> pumpTestApp(
   DateTime? now,
   Stream<DateTime>? clock,
   FakeNotificationService? notifications,
+  MediaStore? media,
+  MediaCapture? capture,
   List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
@@ -34,6 +39,8 @@ Future<void> pumpTestApp(
           notifications ?? FakeNotificationService(),
         ),
         if (now != null) reminderClockProvider.overrideWithValue(() => now),
+        mediaStoreProvider.overrideWithValue(media ?? tempMediaStore()),
+        mediaCaptureProvider.overrideWithValue(capture ?? FakeMediaCapture()),
         ...overrides,
       ],
       child: const QuestLogApp(),
@@ -65,4 +72,20 @@ Future<void> settleAsync(WidgetTester tester) async {
     await tester.pump(const Duration(milliseconds: 50));
   }
   await tester.pumpAndSettle();
+}
+
+/// Like [settleAsync], but keeps giving real async time (file I/O, isolates)
+/// until [finder] matches or [maxRounds] is reached.
+Future<void> settleUntil(
+  WidgetTester tester,
+  Finder finder, {
+  int maxRounds = 40,
+}) async {
+  for (var i = 0; i < maxRounds && finder.evaluate().isEmpty; i++) {
+    await tester.runAsync(
+      () => Future<void>.delayed(const Duration(milliseconds: 50)),
+    );
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  await tester.pump(const Duration(milliseconds: 500));
 }
