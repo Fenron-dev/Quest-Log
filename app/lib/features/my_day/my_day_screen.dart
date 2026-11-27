@@ -404,7 +404,9 @@ class _GapTile extends StatelessWidget {
 
 /// Vertical timeline: one row per hour. Entries and appointments open
 /// their task; tapping free space plans an appointment or adds time.
-class _Timeline extends ConsumerWidget {
+/// Short entries get a minimum height and move to their own lane so they
+/// stay readable and tappable; zoom stretches the hours.
+class _Timeline extends ConsumerStatefulWidget {
   const _Timeline({
     required this.summary,
     required this.now,
@@ -415,8 +417,23 @@ class _Timeline extends ConsumerWidget {
   final DateTime now;
   final List<TaskView> appointments;
 
-  static const _hourHeight = 64.0;
+  @override
+  ConsumerState<_Timeline> createState() => _TimelineState();
+}
+
+class _TimelineState extends ConsumerState<_Timeline> {
+  static const _zoomLevels = [64.0, 128.0, 256.0];
   static const _labelWidth = 40.0;
+
+  /// Smallest drawn height of an entry, enough for one line and a finger.
+  static const minBlockHeight = 28.0;
+
+  int _zoom = 0;
+
+  double get _hourHeight => _zoomLevels[_zoom];
+  DaySummary get summary => widget.summary;
+  DateTime get now => widget.now;
+  List<TaskView> get appointments => widget.appointments;
 
   Future<void> _onFreeSlot(BuildContext context, DateTime at) async {
     final canBackfill = at.isBefore(now);
@@ -457,10 +474,9 @@ class _Timeline extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final (from, to) = visibleHours(summary, now, appointments: appointments);
     final start = summary.day.add(Duration(hours: from));
-    final scheme = Theme.of(context).colorScheme;
     double y(DateTime t) =>
         (t.difference(start).inSeconds / 3600).clamp(
           0,
@@ -468,188 +484,230 @@ class _Timeline extends ConsumerWidget {
         ) *
         _hourHeight;
 
-    // Lay out overlapping entries side by side in lanes.
-    final lanes = <List<EntryView>>[];
+    // Drawn extent of each entry (at least minBlockHeight). Entries whose
+    // drawn boxes would overlap go side by side in lanes.
+    final top = <String, double>{};
+    final height = <String, double>{};
+    final laneEnds = <double>[];
     final laneOf = <String, int>{};
     for (final e in [
       ...summary.entries,
     ]..sort((a, b) => a.entry.start.compareTo(b.entry.start))) {
-      var lane = lanes.indexWhere(
-        (l) => !(l.last.entry.end ?? now).isAfter(e.entry.start),
+      final t = y(e.entry.start);
+      final h = (y(e.entry.end ?? now) - t).clamp(
+        minBlockHeight,
+        double.infinity,
       );
+      top[e.entry.id] = t;
+      height[e.entry.id] = h;
+      var lane = laneEnds.indexWhere((end) => end <= t + 0.5);
       if (lane < 0) {
-        lanes.add([]);
-        lane = lanes.length - 1;
+        laneEnds.add(0);
+        lane = laneEnds.length - 1;
       }
-      lanes[lane].add(e);
+      laneEnds[lane] = t + h;
       laneOf[e.entry.id] = lane;
     }
-    final laneCount = lanes.isEmpty ? 1 : lanes.length;
+    final laneCount = laneEnds.isEmpty ? 1 : laneEnds.length;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 8, 16, 8),
-      child: SizedBox(
-        height: (to - from) * _hourHeight + 8,
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final width = c.maxWidth - _labelWidth;
-            final laneWidth = width / laneCount;
-            return Stack(
-              children: [
-                // Free space: tap to plan or backfill at that time.
-                Positioned.fill(
-                  left: _labelWidth,
-                  child: GestureDetector(
-                    key: const Key('timeline-free-space'),
-                    behavior: HitTestBehavior.opaque,
-                    onTapUp: (d) {
-                      final minutes = (d.localPosition.dy / _hourHeight * 60)
-                          .floor();
-                      final rounded = minutes - minutes % 15;
-                      _onFreeSlot(
-                        context,
-                        start.add(Duration(minutes: rounded)),
-                      );
-                    },
-                  ),
+      padding: const EdgeInsets.fromLTRB(8, 0, 16, 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              IconButton(
+                tooltip: 'Zeitstrahl verkleinern',
+                icon: const Icon(Icons.zoom_out),
+                onPressed: _zoom == 0 ? null : () => setState(() => _zoom--),
+              ),
+              IconButton(
+                tooltip: 'Zeitstrahl vergrößern',
+                icon: const Icon(Icons.zoom_in),
+                onPressed: _zoom == _zoomLevels.length - 1
+                    ? null
+                    : () => setState(() => _zoom++),
+              ),
+            ],
+          ),
+          _body(context, from, to, start, y, top, height, laneOf, laneCount),
+        ],
+      ),
+    );
+  }
+
+  Widget _body(
+    BuildContext context,
+    int from,
+    int to,
+    DateTime start,
+    double Function(DateTime) y,
+    Map<String, double> top,
+    Map<String, double> height,
+    Map<String, int> laneOf,
+    int laneCount,
+  ) {
+    final scheme = Theme.of(context).colorScheme;
+    final total = (to - from) * _hourHeight;
+    final bottom = top.keys.fold<double>(
+      total,
+      (m, id) => top[id]! + height[id]! > m ? top[id]! + height[id]! : m,
+    );
+    return SizedBox(
+      height: bottom + 8,
+      child: LayoutBuilder(
+        builder: (context, c) {
+          final width = c.maxWidth - _labelWidth;
+          final laneWidth = width / laneCount;
+          return Stack(
+            children: [
+              // Free space: tap to plan or backfill at that time.
+              Positioned.fill(
+                left: _labelWidth,
+                child: GestureDetector(
+                  key: const Key('timeline-free-space'),
+                  behavior: HitTestBehavior.opaque,
+                  onTapUp: (d) {
+                    final minutes = (d.localPosition.dy / _hourHeight * 60)
+                        .floor();
+                    final rounded = minutes - minutes % 15;
+                    _onFreeSlot(context, start.add(Duration(minutes: rounded)));
+                  },
                 ),
-                IgnorePointer(
-                  child: Stack(
-                    children: [
-                      for (var h = from; h <= to; h++)
-                        Positioned(
-                          top: (h - from) * _hourHeight,
-                          left: 0,
-                          right: 0,
-                          child: Row(
-                            children: [
-                              SizedBox(
-                                width: _labelWidth,
-                                child: Text(
-                                  '$h:00',
-                                  style: Theme.of(context).textTheme.labelSmall,
-                                ),
+              ),
+              IgnorePointer(
+                child: Stack(
+                  children: [
+                    for (var h = from; h <= to; h++)
+                      Positioned(
+                        top: (h - from) * _hourHeight,
+                        left: 0,
+                        right: 0,
+                        child: Row(
+                          children: [
+                            SizedBox(
+                              width: _labelWidth,
+                              child: Text(
+                                '$h:00',
+                                style: Theme.of(context).textTheme.labelSmall,
                               ),
-                              Expanded(
-                                child: Divider(
-                                  height: 1,
-                                  color: scheme.outline,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-                for (final g in summary.gaps)
-                  Positioned(
-                    top: y(g.start),
-                    height: (y(g.end) - y(g.start)).clamp(2, double.infinity),
-                    left: _labelWidth,
-                    width: width,
-                    child: InkWell(
-                      onTap: () => showGapFillSheet(
-                        context,
-                        gap: g,
-                        dayEntries: summary.entries,
-                      ),
-                      child: Container(
-                        color: gapColor.withValues(alpha: 0.5),
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        alignment: Alignment.centerLeft,
-                        child: Text(
-                          '${g.duration.inMinutes} min offen – Nachtragen',
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(fontSize: 12),
-                        ),
-                      ),
-                    ),
-                  ),
-                for (final a in appointments)
-                  Positioned(
-                    top: y(a.task.plannedDay!),
-                    height:
-                        (y(
-                                  a.task.plannedDay!.add(
-                                    Duration(minutes: a.task.estimateMin ?? 30),
-                                  ),
-                                ) -
-                                y(a.task.plannedDay!))
-                            .clamp(20, double.infinity),
-                    left: _labelWidth,
-                    width: width,
-                    child: InkWell(
-                      onTap: () => openTask(context, a.task.id),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: ColorPalette.resolve(a.color),
-                            width: 2,
-                          ),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 6),
-                        alignment: Alignment.topLeft,
-                        child: Text(
-                          '${formatTime(a.task.plannedDay!)} ${a.task.title}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                for (final e in summary.entries)
-                  Positioned(
-                    top: y(e.entry.start),
-                    height: (y(e.entry.end ?? now) - y(e.entry.start)).clamp(
-                      4,
-                      double.infinity,
-                    ),
-                    left: _labelWidth + laneOf[e.entry.id]! * laneWidth,
-                    width: laneWidth - 2,
-                    child: GestureDetector(
-                      onTap: e.task != null
-                          ? () => openTask(context, e.task!.id)
-                          : () => showEntryEditSheet(context, e),
-                      onLongPress: () => showEntryEditSheet(context, e),
-                      child: Container(
-                        decoration: BoxDecoration(
-                          color: ColorPalette.resolve(e.color),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Text(
-                          e.title,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: ColorPalette.onColor(
-                              ColorPalette.resolve(e.color),
                             ),
+                            Expanded(
+                              child: Divider(height: 1, color: scheme.outline),
+                            ),
+                          ],
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              for (final g in summary.gaps)
+                Positioned(
+                  top: y(g.start),
+                  height: (y(g.end) - y(g.start)).clamp(2, double.infinity),
+                  left: _labelWidth,
+                  width: width,
+                  child: InkWell(
+                    onTap: () => showGapFillSheet(
+                      context,
+                      gap: g,
+                      dayEntries: summary.entries,
+                    ),
+                    child: Container(
+                      color: gapColor.withValues(alpha: 0.5),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        '${g.duration.inMinutes} min offen – Nachtragen',
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(fontSize: 12),
+                      ),
+                    ),
+                  ),
+                ),
+              for (final a in appointments)
+                Positioned(
+                  top: y(a.task.plannedDay!),
+                  height:
+                      (y(
+                                a.task.plannedDay!.add(
+                                  Duration(minutes: a.task.estimateMin ?? 30),
+                                ),
+                              ) -
+                              y(a.task.plannedDay!))
+                          .clamp(20, double.infinity),
+                  left: _labelWidth,
+                  width: width,
+                  child: InkWell(
+                    onTap: () => openTask(context, a.task.id),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: ColorPalette.resolve(a.color),
+                          width: 2,
+                        ),
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
+                      alignment: Alignment.topLeft,
+                      child: Text(
+                        '${formatTime(a.task.plannedDay!)} ${a.task.title}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              for (final e in summary.entries)
+                Positioned(
+                  top: top[e.entry.id],
+                  height: height[e.entry.id],
+                  left: _labelWidth + laneOf[e.entry.id]! * laneWidth,
+                  width: laneWidth - 2,
+                  child: GestureDetector(
+                    key: Key('timeline-entry-${e.entry.id}'),
+                    onTap: e.task != null
+                        ? () => openTask(context, e.task!.id)
+                        : () => showEntryEditSheet(context, e),
+                    onLongPress: () => showEntryEditSheet(context, e),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: ColorPalette.resolve(e.color),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      child: Text(
+                        e.title,
+                        maxLines: height[e.entry.id]! >= 44 ? 2 : 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: ColorPalette.onColor(
+                            ColorPalette.resolve(e.color),
                           ),
                         ),
                       ),
                     ),
                   ),
-                if (dayOf(now) == summary.day)
-                  Positioned(
-                    top: y(now),
-                    left: _labelWidth - 4,
-                    right: 0,
-                    child: IgnorePointer(
-                      child: Container(height: 2, color: scheme.error),
-                    ),
+                ),
+              if (dayOf(now) == summary.day)
+                Positioned(
+                  top: y(now),
+                  left: _labelWidth - 4,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Container(height: 2, color: scheme.error),
                   ),
-              ],
-            );
-          },
-        ),
+                ),
+            ],
+          );
+        },
       ),
     );
   }
