@@ -1,7 +1,5 @@
-import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -224,7 +222,8 @@ class _VideoPageState extends State<_VideoPage> {
   }
 }
 
-/// Play/pause for a voice note. The player is created on first play.
+/// Play/pause for a voice note. Playback uses video_player (audio-only
+/// files work there too); the player is created on first play.
 class VoiceNotePlayer extends StatefulWidget {
   const VoiceNotePlayer({super.key, required this.file, required this.note});
 
@@ -236,51 +235,51 @@ class VoiceNotePlayer extends StatefulWidget {
 }
 
 class _VoiceNotePlayerState extends State<VoiceNotePlayer> {
-  AudioPlayer? _player;
-  final _subs = <StreamSubscription<Object?>>[];
+  VideoPlayerController? _player;
   bool _playing = false;
   Duration _position = Duration.zero;
 
   @override
   void dispose() {
-    for (final s in _subs) {
-      s.cancel();
-    }
     _player?.dispose();
     super.dispose();
   }
 
+  void _onUpdate() {
+    final v = _player?.value;
+    if (v == null || !mounted) return;
+    final finished =
+        v.duration > Duration.zero && v.position >= v.duration && !v.isPlaying;
+    setState(() {
+      _playing = v.isPlaying;
+      _position = finished ? Duration.zero : v.position;
+    });
+    if (finished) _player?.seekTo(Duration.zero);
+  }
+
   Future<void> _toggle() async {
     try {
-      final p = _player ??= () {
-        final p = AudioPlayer();
-        _subs
-          ..add(
-            p.onPositionChanged.listen((d) => setState(() => _position = d)),
-          )
-          ..add(
-            p.onPlayerComplete.listen(
-              (_) => setState(() {
-                _playing = false;
-                _position = Duration.zero;
-              }),
-            ),
-          );
-        return p;
-      }();
-      if (_playing) {
+      var p = _player;
+      if (p == null) {
+        p = VideoPlayerController.file(widget.file);
+        await p.initialize();
+        p.addListener(_onUpdate);
+        _player = p;
+      }
+      if (p.value.isPlaying) {
         await p.pause();
-        setState(() => _playing = false);
       } else {
-        setState(() => _playing = true);
-        await p.play(DeviceFileSource(widget.file.path));
+        await p.play();
       }
     } catch (_) {
+      // No playback backend on some desktop platforms.
       if (mounted) {
         setState(() => _playing = false);
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-            content: Text('Sprachnotiz kann nicht abgespielt werden.'),
+            content: Text(
+              'Sprachnotiz kann auf diesem System nicht abgespielt werden.',
+            ),
           ),
         );
       }
