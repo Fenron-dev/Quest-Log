@@ -63,7 +63,7 @@ void main() {
   testWidgets('day header, gap and filling it as a category', (tester) async {
     await tester.runAsync(seed);
     await pumpTestApp(tester, db, now: now);
-    await tester.tap(navItem('Mein Tag'));
+    await tester.tap(find.text('Mein Tag'));
     await settleAsync(tester);
 
     // 2.5 h recorded on one task → 15 AE.
@@ -91,7 +91,7 @@ void main() {
   ) async {
     await tester.runAsync(seed);
     await pumpTestApp(tester, db, now: now);
-    await tester.tap(navItem('Mein Tag'));
+    await tester.tap(find.text('Mein Tag'));
     await settleAsync(tester);
 
     await tester.tap(find.text('Nachtragen'));
@@ -125,6 +125,8 @@ void main() {
   testWidgets('task detail: add a note', (tester) async {
     await tester.runAsync(seed);
     await pumpTestApp(tester, db, now: now);
+    await tester.tap(navItem('Aufgaben'));
+    await settleAsync(tester);
     await tester.longPress(find.text('Server prüfen'));
     await settleAsync(tester);
     expect(find.textContaining('2:30 h erfasst'), findsOneWidget);
@@ -141,6 +143,50 @@ void main() {
     await tester.tap(find.byTooltip('Notiz speichern'));
     await settleAsync(tester);
     expect(find.text('Lüfter getauscht'), findsOneWidget);
+
+    await closeTestApp(tester, db);
+  });
+
+  testWidgets('editing an entry assigns it to a project and its task', (
+    tester,
+  ) async {
+    await tester.runAsync(() async {
+      await seed();
+      final k = await (db.select(db.customers)).getSingle();
+      await db
+          .into(db.projects)
+          .insert(
+            ProjectsCompanion.insert(
+              name: 'Serverumzug',
+              customerId: Value(k.id),
+            ),
+          );
+    });
+    await pumpTestApp(tester, db, now: now);
+    await tester.tap(find.text('Mein Tag'));
+    await settleAsync(tester);
+
+    await tester.tap(find.text('Server prüfen').first);
+    await settleAsync(tester);
+    expect(find.text('Zeiteintrag'), findsOneWidget);
+    expect(find.text('Von 09:00'), findsOneWidget);
+
+    await tester.tap(find.text('Kein Projekt'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Serverumzug').last);
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Speichern'));
+    await settleAsync(tester);
+
+    final result = await tester.runAsync(() async {
+      final project = await db.select(db.projects).getSingle();
+      final task = await db.select(db.tasks).getSingle();
+      final entries = await db.select(db.timeEntries).get();
+      return (project.id, task.projectId, entries.map((e) => e.projectId));
+    });
+    final (projectId, taskProject, entryProjects) = result!;
+    expect(taskProject, projectId);
+    expect(entryProjects, everyElement(projectId));
 
     await closeTestApp(tester, db);
   });

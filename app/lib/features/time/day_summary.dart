@@ -18,7 +18,15 @@ class DaySummary {
     required this.billable,
     required this.gaps,
     required this.aeMinutes,
+    required this.worked,
+    required this.rawByTask,
   });
+
+  /// Time on the work clock (start to now or end, minus breaks).
+  final Duration worked;
+
+  /// Unweighted recorded time per task on this day.
+  final Map<String, Duration> rawByTask;
 
   final DateTime day;
   final List<EntryView> entries;
@@ -96,6 +104,12 @@ class DaySummary {
     }
     final recorded = allocation.values.fold(Duration.zero, (a, b) => a + b);
     final clockSpans = clock?.spans(effectiveNow) ?? const <TimeSpan>[];
+    final rawByTask = <String, Duration>{};
+    for (final s in spans) {
+      if (s.taskId == null) continue;
+      rawByTask[s.taskId!] =
+          (rawByTask[s.taskId!] ?? Duration.zero) + s.end.difference(s.start);
+    }
 
     return DaySummary(
       day: from,
@@ -108,6 +122,8 @@ class DaySummary {
       billable: billable,
       gaps: findGaps(clockSpans, spans),
       aeMinutes: settings.aeMinutes,
+      worked: clockSpans.fold(Duration.zero, (a, c) => a + c.duration),
+      rawByTask: rawByTask,
     );
   }
 }

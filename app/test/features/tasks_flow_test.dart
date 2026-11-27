@@ -13,6 +13,8 @@ void main() {
 
   testWidgets('quick capture puts a task into the inbox', (tester) async {
     await pumpTestApp(tester, db);
+    await tester.tap(navItem('Aufgaben'));
+    await tester.pumpAndSettle();
     expect(find.textContaining('Nichts offen'), findsOneWidget);
 
     await tester.tap(find.text('Erfassen'));
@@ -45,6 +47,8 @@ void main() {
   testWidgets('checklist, required steps and template start', (tester) async {
     await tester.runAsync(() => insertSampleData(db));
     await pumpTestApp(tester, db);
+    await tester.tap(navItem('Aufgaben'));
+    await settleAsync(tester);
 
     // Expand the checklist of a task and tick a step inline.
     await tester.tap(find.text('Drucker im Empfang prüfen'));
@@ -83,9 +87,11 @@ void main() {
   testWidgets('tiles view is remembered', (tester) async {
     await tester.runAsync(() => insertSampleData(db));
     await pumpTestApp(tester, db);
+    await tester.tap(navItem('Aufgaben'));
+    await settleAsync(tester);
     await tester.tap(find.byTooltip('Als Kacheln anzeigen'));
     await tester.pumpAndSettle();
-    expect(find.byType(SliverGrid), findsOneWidget);
+    expect(find.byType(GridView), findsOneWidget);
     expect(await db.readSetting('nowView'), 'tiles');
     await closeTestApp(tester, db);
   });

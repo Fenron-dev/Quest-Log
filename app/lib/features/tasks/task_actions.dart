@@ -12,7 +12,7 @@ import '../time/data/time_repository.dart';
 import '../time/engine/time_math.dart';
 import 'data/tasks_repository.dart';
 
-String taskRoute(String id) => '/tasks/$id';
+String taskRoute(String id) => '/task/$id';
 
 /// Marks a task done; asks first if required checklist steps are open.
 Future<void> completeTask(

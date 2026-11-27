@@ -166,6 +166,54 @@ class TasksRepository {
     return query.watch().map((rows) => rows.map(_toView).toList());
   }
 
+  /// Tasks for Jetzt: in progress (running or paused), planned for
+  /// [today], or waiting with a follow-up due.
+  Stream<List<TaskView>> watchFocus(DateTime today) {
+    final t = _db.tasks;
+    final day = _dayOf(today);
+    final nextDay = day.add(const Duration(days: 1));
+    final plannedToday =
+        t.plannedDay.isBiggerOrEqualValue(day) &
+        t.plannedDay.isSmallerThanValue(nextDay) &
+        t.status.isIn([
+          TaskStatus.inbox.name,
+          TaskStatus.planned.name,
+          TaskStatus.blocked.name,
+        ]);
+    final followUpDue =
+        t.status.equals(TaskStatus.waitingFor.name) &
+        t.followUpDate.isSmallerThanValue(nextDay);
+    final query = _viewQuery()
+      ..where(
+        t.status.equals(TaskStatus.inProgress.name) |
+            plannedToday |
+            followUpDue,
+      );
+    return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
+  /// The next open task planned (or due) after [today].
+  Stream<TaskView?> watchNextUp(DateTime today) {
+    final t = _db.tasks;
+    final nextDay = _dayOf(today).add(const Duration(days: 1));
+    final when = coalesce([t.plannedDay, t.due]);
+    final query = _viewQuery()
+      ..where(
+        t.status.isIn([
+              TaskStatus.inbox.name,
+              TaskStatus.planned.name,
+              TaskStatus.waitingFor.name,
+              TaskStatus.blocked.name,
+            ]) &
+            when.isBiggerOrEqualValue(nextDay),
+      )
+      ..orderBy([OrderingTerm(expression: when)])
+      ..limit(1);
+    return query.watch().map(
+      (rows) => rows.isEmpty ? null : _toView(rows.first),
+    );
+  }
+
   Stream<TaskView?> watchTask(String id) {
     final query = _viewQuery()..where(_db.tasks.id.equals(id));
     return query.watchSingleOrNull().map(
@@ -430,3 +478,12 @@ final checklistProvider = StreamProvider.autoDispose
       (ref, taskId) =>
           ref.watch(tasksRepositoryProvider).watchChecklist(taskId),
     );
+
+final focusTasksProvider = StreamProvider.autoDispose
+    .family<List<TaskView>, DateTime>(
+      (ref, today) => ref.watch(tasksRepositoryProvider).watchFocus(today),
+    );
+
+final nextUpProvider = StreamProvider.autoDispose.family<TaskView?, DateTime>(
+  (ref, today) => ref.watch(tasksRepositoryProvider).watchNextUp(today),
+);

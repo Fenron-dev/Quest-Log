@@ -56,6 +56,8 @@ void main() {
   testWidgets('adding a required checklist step to a task', (tester) async {
     await tester.runAsync(() => insertSampleData(db));
     await pumpTestApp(tester, db);
+    await tester.tap(navItem('Aufgaben'));
+    await settleAsync(tester);
     await tester.longPress(find.text('Lizenzen verlängern'));
     await settleAsync(tester);
 
