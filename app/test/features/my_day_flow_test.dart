@@ -166,7 +166,7 @@ void main() {
     await tester.tap(find.text('Mein Tag'));
     await settleAsync(tester);
 
-    await tester.tap(find.text('Server prüfen').first);
+    await tester.tap(find.byTooltip('Zeiteintrag bearbeiten').first);
     await settleAsync(tester);
     expect(find.text('Zeiteintrag'), findsOneWidget);
     expect(find.text('Von 09:00'), findsOneWidget);
@@ -188,6 +188,95 @@ void main() {
     expect(taskProject, projectId);
     expect(entryProjects, everyElement(projectId));
 
+    await closeTestApp(tester, db);
+  });
+
+  testWidgets('tapping an entry jumps to its task', (tester) async {
+    await tester.runAsync(seed);
+    await pumpTestApp(tester, db, now: now);
+    await tester.tap(find.text('Mein Tag'));
+    await settleAsync(tester);
+    await tester.tap(find.text('Server prüfen').first);
+    await settleAsync(tester);
+    expect(find.widgetWithText(AppBar, 'Aufgabe'), findsOneWidget);
+    await closeTestApp(tester, db);
+  });
+
+  testWidgets('tapping free space in the timeline plans an appointment', (
+    tester,
+  ) async {
+    await tester.runAsync(seed);
+    await pumpTestApp(tester, db, now: now);
+    await tester.tap(find.text('Mein Tag'));
+    await settleAsync(tester);
+    await tester.tap(find.text('Zeitstrahl'));
+    await settleAsync(tester);
+
+    await tester.scrollUntilVisible(
+      find.text('14:00'),
+      100,
+      scrollable: find.byType(Scrollable).first,
+    );
+    await tester.pumpAndSettle();
+    // The label sits at the top of the hour row; a bit below it is 14:00.
+    await tester.tapAt(
+      tester.getTopLeft(find.text('14:00')) + const Offset(120, 4),
+    );
+    await settleAsync(tester);
+    expect(find.text('Termin planen um 14:00'), findsOneWidget);
+    // In the future relative to "now" (12:00): no backfill option.
+    expect(find.textContaining('Zeit nachtragen'), findsNothing);
+
+    await tester.tap(find.text('Termin planen um 14:00'));
+    await settleAsync(tester);
+    await tester.enterText(find.widgetWithText(TextField, 'Was?'), 'Wartung');
+    await tester.tap(find.text('1 h'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('Termin speichern'));
+    await settleAsync(tester);
+
+    expect(find.text('14:00 Wartung'), findsOneWidget);
+    final task = await tester.runAsync(
+      () => (db.select(
+        db.tasks,
+      )..where((t) => t.title.equals('Wartung'))).getSingle(),
+    );
+    expect(task!.plannedDay, at(14));
+    expect(task.estimateMin, 60);
+
+    // Jetzt shows it at the bottom as the next appointment.
+    await tester.tap(find.text('Jetzt').first);
+    await settleAsync(tester);
+    // Not yet a card – it waits in the bar until its time.
+    expect(find.textContaining('um 14:00 · Wartung'), findsOneWidget);
+    expect(find.text('Antippen zum Starten'), findsNothing);
+
+    await closeTestApp(tester, db);
+  });
+
+  testWidgets('tapping past free space offers backfilling time', (
+    tester,
+  ) async {
+    await tester.runAsync(seed);
+    await pumpTestApp(tester, db, now: now);
+    await tester.tap(find.text('Mein Tag'));
+    await settleAsync(tester);
+    await tester.tap(find.text('Zeitstrahl'));
+    await settleAsync(tester);
+    // 8:00 is before the clock started and before "now".
+    await tester.tapAt(
+      tester.getTopLeft(find.text('8:00')) + const Offset(120, 4),
+    );
+    await settleAsync(tester);
+    expect(find.text('Zeit nachtragen ab 08:00'), findsOneWidget);
+    await tester.tap(find.text('Zeit nachtragen ab 08:00'));
+    await settleAsync(tester);
+    await tester.tap(find.widgetWithText(ActionChip, 'Intern'));
+    await settleAsync(tester);
+    final entries = await tester.runAsync(
+      () => db.select(db.timeEntries).get(),
+    );
+    expect(entries!.where((e) => e.category == 'internal'), hasLength(1));
     await closeTestApp(tester, db);
   });
 }

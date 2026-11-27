@@ -16,19 +16,26 @@ Future<void> showGapFillSheet(
   BuildContext context, {
   required TimeSpan gap,
   required List<EntryView> dayEntries,
+  String title = 'Lücke nachtragen',
 }) {
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     showDragHandle: true,
-    builder: (_) => _GapFillSheet(gap: gap, dayEntries: dayEntries),
+    builder: (_) =>
+        _GapFillSheet(gap: gap, dayEntries: dayEntries, title: title),
   );
 }
 
 class _GapFillSheet extends ConsumerStatefulWidget {
-  const _GapFillSheet({required this.gap, required this.dayEntries});
+  const _GapFillSheet({
+    required this.gap,
+    required this.dayEntries,
+    required this.title,
+  });
 
   final TimeSpan gap;
+  final String title;
   final List<EntryView> dayEntries;
 
   @override
@@ -126,7 +133,7 @@ class _GapFillSheetState extends ConsumerState<_GapFillSheet> {
           shrinkWrap: true,
           padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
           children: [
-            Text('Lücke nachtragen', style: textTheme.titleLarge),
+            Text(widget.title, style: textTheme.titleLarge),
             const SizedBox(height: 4),
             Row(
               children: [

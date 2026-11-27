@@ -258,7 +258,18 @@ class _TaskEditScreenState extends ConsumerState<TaskEditScreen> {
                         child: DateField(
                           label: 'Geplant für',
                           value: _plannedDay,
-                          onChanged: (d) => setState(() => _plannedDay = d),
+                          // Keep an appointment's time when the day changes.
+                          onChanged: (d) => setState(
+                            () => _plannedDay = d == null || _plannedDay == null
+                                ? d
+                                : DateTime(
+                                    d.year,
+                                    d.month,
+                                    d.day,
+                                    _plannedDay!.hour,
+                                    _plannedDay!.minute,
+                                  ),
+                          ),
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -271,6 +282,13 @@ class _TaskEditScreenState extends ConsumerState<TaskEditScreen> {
                       ),
                     ],
                   ),
+                  if (_plannedDay != null) ...[
+                    const SizedBox(height: 8),
+                    _AppointmentTimeRow(
+                      value: _plannedDay!,
+                      onChanged: (d) => setState(() => _plannedDay = d),
+                    ),
+                  ],
                   const SizedBox(height: 16),
                   Row(
                     children: [
@@ -310,6 +328,59 @@ class _TaskEditScreenState extends ConsumerState<TaskEditScreen> {
                 ],
               ),
             ),
+    );
+  }
+}
+
+/// Optional time of day for a planned task, which makes it an appointment.
+class _AppointmentTimeRow extends StatelessWidget {
+  const _AppointmentTimeRow({required this.value, required this.onChanged});
+
+  final DateTime value;
+  final ValueChanged<DateTime> onChanged;
+
+  bool get _hasTime => value.hour != 0 || value.minute != 0;
+
+  @override
+  Widget build(BuildContext context) {
+    String two(int v) => v.toString().padLeft(2, '0');
+    return Row(
+      children: [
+        const Icon(Icons.schedule),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            _hasTime
+                ? 'Termin um ${two(value.hour)}:${two(value.minute)}'
+                : 'Ohne Uhrzeit',
+          ),
+        ),
+        TextButton(
+          onPressed: () async {
+            final picked = await showTimePicker(
+              context: context,
+              initialTime: _hasTime
+                  ? TimeOfDay.fromDateTime(value)
+                  : const TimeOfDay(hour: 9, minute: 0),
+            );
+            if (picked == null) return;
+            final minute = picked.hour == 0 && picked.minute == 0
+                ? 1
+                : picked.minute;
+            onChanged(
+              DateTime(value.year, value.month, value.day, picked.hour, minute),
+            );
+          },
+          child: Text(_hasTime ? 'Ändern' : 'Uhrzeit setzen'),
+        ),
+        if (_hasTime)
+          IconButton(
+            tooltip: 'Uhrzeit entfernen',
+            icon: const Icon(Icons.clear),
+            onPressed: () =>
+                onChanged(DateTime(value.year, value.month, value.day)),
+          ),
+      ],
     );
   }
 }

@@ -3,12 +3,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/settings/time_settings.dart';
+import '../../core/settings/view_settings.dart';
 import '../../core/ui/formatting.dart';
 import '../tasks/data/tasks_repository.dart';
 import '../tasks/quick_capture_sheet.dart';
 import '../tasks/task_actions.dart';
 import '../time/data/time_repository.dart';
 import '../time/day_summary.dart';
+import '../time/gap_fill_sheet.dart' show formatTime;
 import '../time/engine/time_math.dart' show formatHm;
 import '../time/timer_widgets.dart';
 import 'focus_card.dart';
@@ -26,14 +28,25 @@ class NowScreen extends ConsumerWidget {
     final focus = ref.watch(focusTasksProvider(today)).value ?? const [];
     final summary = ref.watch(daySummaryProvider(today));
     final settings = ref.watch(currentTimeSettingsProvider);
+    final now = ref.watch(currentNowProvider);
+    final layout = ref.watch(jetztViewProvider).value ?? NowView.tiles;
     final textTheme = Theme.of(context).textTheme;
 
     final runningByTask = {
       for (final r in running)
         if (r.entry.taskId != null) r.entry.taskId!: r,
     };
+    // Appointments later today wait in the bar at the bottom until their
+    // time has come (unless already started).
+    bool waiting(TaskView v) =>
+        isAppointment(v.task) &&
+        v.task.plannedDay!.isAfter(now) &&
+        v.task.status != TaskStatus.inProgress &&
+        !runningByTask.containsKey(v.task.id);
+    final upcomingToday = focus.where(waiting).toList()
+      ..sort((a, b) => a.task.plannedDay!.compareTo(b.task.plannedDay!));
     // Running first (in start order), then paused, then planned.
-    final cards = [...focus]
+    final cards = focus.where((v) => !waiting(v)).toList()
       ..sort((a, b) {
         int rank(TaskView v) {
           if (runningByTask.containsKey(v.task.id)) return 0;
@@ -68,7 +81,7 @@ class NowScreen extends ConsumerWidget {
                   const NowDayHeader(showingDay: false),
                   const SizedBox(height: 20),
                   Row(
-                    crossAxisAlignment: CrossAxisAlignment.end,
+                    crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       Expanded(
                         child: Text(
@@ -80,9 +93,26 @@ class NowScreen extends ConsumerWidget {
                       ),
                       Text(
                         'Arbeitszeit ${formatHm(summary?.worked ?? Duration.zero)}',
-                        style: textTheme.titleMedium?.copyWith(
+                        style: textTheme.titleSmall?.copyWith(
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
+                      ),
+                      IconButton(
+                        tooltip: layout == NowView.tiles
+                            ? 'Als Liste anzeigen'
+                            : 'Als Kacheln anzeigen',
+                        icon: Icon(
+                          layout == NowView.tiles
+                              ? Icons.view_list
+                              : Icons.grid_view,
+                        ),
+                        onPressed: () => ref
+                            .read(jetztViewProvider.notifier)
+                            .set(
+                              layout == NowView.tiles
+                                  ? NowView.list
+                                  : NowView.tiles,
+                            ),
                       ),
                     ],
                   ),
@@ -96,24 +126,36 @@ class NowScreen extends ConsumerWidget {
                       padding: const EdgeInsets.only(bottom: 12),
                       child: RunningTimerCard(view: r, summary: summary),
                     ),
-                  GridView.builder(
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithMaxCrossAxisExtent(
-                          maxCrossAxisExtent: 320,
-                          mainAxisExtent: 230,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
+                  if (layout == NowView.tiles)
+                    GridView.builder(
+                      shrinkWrap: true,
+                      physics: const NeverScrollableScrollPhysics(),
+                      gridDelegate:
+                          const SliverGridDelegateWithMaxCrossAxisExtent(
+                            maxCrossAxisExtent: 240,
+                            mainAxisExtent: 190,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                          ),
+                      itemCount: cards.length,
+                      itemBuilder: (_, i) => FocusCard(
+                        key: ValueKey(cards[i].task.id),
+                        view: cards[i],
+                        running: runningByTask[cards[i].task.id],
+                        summary: summary,
+                      ),
+                    )
+                  else
+                    for (final c in cards)
+                      Padding(
+                        key: ValueKey(c.task.id),
+                        padding: const EdgeInsets.only(bottom: 8),
+                        child: FocusRow(
+                          view: c,
+                          running: runningByTask[c.task.id],
+                          summary: summary,
                         ),
-                    itemCount: cards.length,
-                    itemBuilder: (_, i) => FocusCard(
-                      key: ValueKey(cards[i].task.id),
-                      view: cards[i],
-                      running: runningByTask[cards[i].task.id],
-                      summary: summary,
-                    ),
-                  ),
+                      ),
                   const SizedBox(height: 12),
                   _NewTaskButton(
                     onTap: () => showQuickCapture(context, planToday: true),
@@ -121,7 +163,11 @@ class NowScreen extends ConsumerWidget {
                 ],
               ),
             ),
-            _NextUpBar(today: today),
+            _NextUpBar(
+              today: today,
+              now: now,
+              upcomingToday: upcomingToday.isEmpty ? null : upcomingToday.first,
+            ),
           ],
         ),
       ),
@@ -192,27 +238,42 @@ class _DashedBorderPainter extends CustomPainter {
 }
 
 class _NextUpBar extends ConsumerWidget {
-  const _NextUpBar({required this.today});
+  const _NextUpBar({
+    required this.today,
+    required this.now,
+    required this.upcomingToday,
+  });
 
   final DateTime today;
+  final DateTime now;
+
+  /// The next appointment later today, if any.
+  final TaskView? upcomingToday;
 
   String _when(DateTime date) {
+    if (DateTime(date.year, date.month, date.day) == today) {
+      final minutes = date.difference(now).inMinutes;
+      if (minutes < 60) return 'in ${minutes < 1 ? 1 : minutes} min';
+      return 'um ${formatTime(date)}';
+    }
     final days = DateTime(
       date.year,
       date.month,
       date.day,
     ).difference(today).inDays;
-    if (days <= 1) return 'morgen';
+    final hasTime = date.hour != 0 || date.minute != 0;
+    final time = hasTime ? ' ${formatTime(date)}' : '';
+    if (days <= 1) return 'morgen$time';
     if (days < 7) {
       const names = ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'];
-      return '${names[date.weekday - 1]} ${formatDate(date).substring(0, 6)}';
+      return '${names[date.weekday - 1]} ${formatDate(date).substring(0, 6)}$time';
     }
-    return formatDate(date);
+    return '${formatDate(date)}$time';
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final next = ref.watch(nextUpProvider(today)).value;
+    final next = upcomingToday ?? ref.watch(nextUpProvider(today)).value;
     final scheme = Theme.of(context).colorScheme;
     final date = next?.task.plannedDay ?? next?.task.due;
     return Padding(
