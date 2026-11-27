@@ -10,6 +10,7 @@ import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_settings.dart';
 import '../templates/templates_screen.dart';
 import '../reminders/reminder_settings_section.dart';
+import '../backup/data_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -97,7 +98,9 @@ class SettingsScreen extends ConsumerWidget {
             onTap: () => context.push(templatesRoute),
           ),
           const SizedBox(height: 20),
-          Text('Daten', style: textTheme.titleMedium),
+          const DataSection(),
+          const SizedBox(height: 20),
+          Text('Beispieldaten', style: textTheme.titleMedium),
           const SizedBox(height: 8),
           OutlinedButton.icon(
             icon: const Icon(Icons.auto_awesome_outlined),

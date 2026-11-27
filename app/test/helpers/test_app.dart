@@ -17,6 +17,7 @@ Future<void> pumpTestApp(
   DateTime? now,
   Stream<DateTime>? clock,
   FakeNotificationService? notifications,
+  List<Override> overrides = const [],
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
@@ -33,6 +34,7 @@ Future<void> pumpTestApp(
           notifications ?? FakeNotificationService(),
         ),
         if (now != null) reminderClockProvider.overrideWithValue(() => now),
+        ...overrides,
       ],
       child: const QuestLogApp(),
     ),
