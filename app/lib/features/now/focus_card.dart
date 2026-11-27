@@ -5,6 +5,7 @@ import '../../core/database/app_database.dart';
 import '../../core/ui/color_palette.dart';
 import '../tasks/data/tasks_repository.dart';
 import '../tasks/task_actions.dart';
+import '../tasks/task_widgets.dart';
 import '../time/data/time_repository.dart';
 import '../time/day_summary.dart';
 import '../time/engine/time_math.dart';
@@ -109,13 +110,16 @@ class FocusCard extends ConsumerWidget {
                     fontSize: 15,
                   ),
                 ),
-                Text(
-                  i.runningDetail,
-                  style: TextStyle(
-                    color: on.withValues(alpha: 0.8),
-                    fontSize: 12,
+                if (view.checklistTotal > 0)
+                  _ChecklistChip(view: view, color: on)
+                else
+                  Text(
+                    i.runningDetail,
+                    style: TextStyle(
+                      color: on.withValues(alpha: 0.8),
+                      fontSize: 12,
+                    ),
                   ),
-                ),
                 const Spacer(),
                 Text(i.time, style: _timeStyle(on, 22)),
                 const SizedBox(height: 6),
@@ -165,6 +169,8 @@ class FocusCard extends ConsumerWidget {
                       ),
                     ),
                   ),
+                  if (view.checklistTotal > 0)
+                    _ChecklistChip(view: view, color: scheme.onSurfaceVariant),
                 ],
               ),
               const SizedBox(height: 2),
@@ -188,8 +194,8 @@ class FocusCard extends ConsumerWidget {
   }
 }
 
-/// Slim list row for Jetzt.
-class FocusRow extends ConsumerWidget {
+/// Slim list row for Jetzt. The chevron unfolds the checklist.
+class FocusRow extends ConsumerStatefulWidget {
   const FocusRow({
     super.key,
     required this.view,
@@ -202,13 +208,54 @@ class FocusRow extends ConsumerWidget {
   final DaySummary? summary;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final i = _FocusInfo(view, running, summary);
+  ConsumerState<FocusRow> createState() => _FocusRowState();
+}
+
+class _FocusRowState extends ConsumerState<FocusRow> {
+  bool _expanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final view = widget.view;
+    final scheme = Theme.of(context).colorScheme;
+    final row = _row(context);
+    if (!_expanded) return row;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        row,
+        Container(
+          margin: const EdgeInsets.only(top: 2),
+          decoration: BoxDecoration(
+            color: scheme.surfaceContainer,
+            borderRadius: BorderRadius.circular(14),
+          ),
+          child: InlineChecklist(view: view),
+        ),
+      ],
+    );
+  }
+
+  Widget? _chevron(Color color) {
+    if (widget.view.checklistTotal == 0) return null;
+    return IconButton(
+      tooltip: _expanded ? 'Checkliste zuklappen' : 'Checkliste aufklappen',
+      color: color,
+      visualDensity: VisualDensity.compact,
+      icon: Icon(_expanded ? Icons.expand_less : Icons.expand_more),
+      onPressed: () => setState(() => _expanded = !_expanded),
+    );
+  }
+
+  Widget _row(BuildContext context) {
+    final view = widget.view;
+    final i = _FocusInfo(view, widget.running, widget.summary);
     final scheme = Theme.of(context).colorScheme;
     final t = i.task;
 
     if (i.isRunning) {
       final on = ColorPalette.onColor(i.color);
+      final chevron = _chevron(on);
       return Material(
         color: i.color,
         borderRadius: BorderRadius.circular(14),
@@ -242,6 +289,7 @@ class FocusRow extends ConsumerWidget {
                     ],
                   ),
                 ),
+                ?chevron,
                 Text(i.time, style: _timeStyle(on, 17)),
                 const SizedBox(width: 4),
                 _PauseButton(taskId: t.id, color: on),
@@ -254,6 +302,7 @@ class FocusRow extends ConsumerWidget {
       );
     }
 
+    final chevron = _chevron(scheme.onSurfaceVariant);
     return Material(
       color: scheme.surfaceContainerHighest,
       borderRadius: BorderRadius.circular(14),
@@ -294,6 +343,7 @@ class FocusRow extends ConsumerWidget {
                   ],
                 ),
               ),
+              ?chevron,
               Icon(Icons.play_arrow_outlined, color: scheme.onSurfaceVariant),
             ],
           ),
@@ -301,6 +351,69 @@ class FocusRow extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// "☑ 1/3" on a tile; opens the checklist in a sheet.
+class _ChecklistChip extends StatelessWidget {
+  const _ChecklistChip({required this.view, required this.color});
+
+  final TaskView view;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      borderRadius: BorderRadius.circular(8),
+      onTap: () => showChecklistSheet(context, view),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.checklist, size: 16, color: color),
+            const SizedBox(width: 3),
+            Text(
+              '${view.checklistDone}/${view.checklistTotal}',
+              semanticsLabel:
+                  'Checkliste ${view.checklistDone} von ${view.checklistTotal}',
+              style: TextStyle(
+                color: color,
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Shows a task's checklist in a bottom sheet.
+Future<void> showChecklistSheet(BuildContext context, TaskView view) {
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (_) => SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.only(left: 8, right: 8, bottom: 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 10),
+              child: Text(
+                view.task.title,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+            ),
+            InlineChecklist(view: view),
+          ],
+        ),
+      ),
+    ),
+  );
 }
 
 class _Dot extends StatelessWidget {
