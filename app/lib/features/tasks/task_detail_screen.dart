@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -209,9 +209,8 @@ class _TaskDetail extends ConsumerWidget {
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     buildDefaultDragHandles: false,
-                    onReorder: (oldIndex, newIndex) {
+                    onReorderItem: (oldIndex, newIndex) {
                       final ids = items.map((i) => i.id).toList();
-                      if (newIndex > oldIndex) newIndex--;
                       ids.insert(newIndex, ids.removeAt(oldIndex));
                       repo.reorderChecklist(t.id, ids);
                     },

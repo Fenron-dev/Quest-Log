@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// Result of [showTextPrompt]: the entered text and, if offered, whether the
 /// checkbox was ticked.

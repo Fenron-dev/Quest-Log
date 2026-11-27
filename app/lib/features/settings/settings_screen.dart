@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -177,9 +177,8 @@ class _AccentButton extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 accent.label,
-                style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                  fontWeight: selected ? FontWeight.bold : null,
-                ),
+                style: Theme.of(context).textTheme.labelSmall
+                    ?.copyWith(fontWeight: selected ? FontWeight.bold : null),
               ),
             ],
           ),

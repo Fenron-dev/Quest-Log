@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/app_database.dart';
@@ -83,9 +83,8 @@ class _QuickCaptureSheetState extends ConsumerState<_QuickCaptureSheet> {
     }
     if (!mounted) return;
     Navigator.pop(context);
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('„$text“ erfasst')));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text('„$text“ erfasst')));
   }
 
   Future<void> _fromTemplate(Template template) async {

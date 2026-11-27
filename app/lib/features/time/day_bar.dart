@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../../core/database/app_database.dart';
 import '../../core/ui/color_palette.dart';
@@ -56,9 +56,8 @@ class DayBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final (from, to) = visibleHours(summary, now, appointments: appointments);
     final scheme = Theme.of(context).colorScheme;
-    final labelStyle = Theme.of(
-      context,
-    ).textTheme.labelSmall?.copyWith(color: scheme.onSurfaceVariant);
+    final labelStyle = Theme.of(context).textTheme.labelSmall
+        ?.copyWith(color: scheme.onSurfaceVariant);
     final gapMinutes = summary.gaps.fold(
       Duration.zero,
       (a, g) => a + g.duration,

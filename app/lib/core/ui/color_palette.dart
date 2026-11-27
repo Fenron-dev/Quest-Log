@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 /// A named colour for customers and projects. The name is shown next to the
 /// swatch so colours can be told apart without relying on colour vision.

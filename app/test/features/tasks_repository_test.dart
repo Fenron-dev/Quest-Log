@@ -42,9 +42,8 @@ void main() {
     test(
       'filters by status group, customer and sorts important first',
       () async {
-        final customer = await CustomersRepository(
-          db,
-        ).saveCustomer(CustomersCompanion.insert(name: 'Beispiel GmbH'));
+        final customer = await CustomersRepository(db)
+            .saveCustomer(CustomersCompanion.insert(name: 'Beispiel GmbH'));
         await repo.createTask(
           TasksCompanion.insert(
             title: 'Normal',
@@ -172,9 +171,8 @@ void main() {
 
   group('templates', () {
     test('creates a planned task with title, checklist and customer', () async {
-      final customer = await CustomersRepository(
-        db,
-      ).saveCustomer(CustomersCompanion.insert(name: 'Muster AG'));
+      final customer = await CustomersRepository(db)
+          .saveCustomer(CustomersCompanion.insert(name: 'Muster AG'));
       final templates = TemplatesRepository(db);
       final templateId = await templates.saveTemplate(
         TemplatesCompanion.insert(
@@ -212,9 +210,8 @@ void main() {
     });
 
     test('falls back to the default customer of the template', () async {
-      final customer = await CustomersRepository(
-        db,
-      ).saveCustomer(CustomersCompanion.insert(name: 'Beispiel GmbH'));
+      final customer = await CustomersRepository(db)
+          .saveCustomer(CustomersCompanion.insert(name: 'Beispiel GmbH'));
       final templates = TemplatesRepository(db);
       final template = (await templates.getTemplate(
         await templates.saveTemplate(

@@ -15,9 +15,9 @@ void main() {
     expect(customers.length, greaterThanOrEqualTo(4));
     expect(customers.where((c) => c.isFavorite), isNotEmpty);
 
-    final open = await CustomersRepository(
-      db,
-    ).watchCustomers(filter: CustomerFilter.withOpen).first;
+    final open = await CustomersRepository(db)
+        .watchCustomers(filter: CustomerFilter.withOpen)
+        .first;
     expect(open, isNotEmpty);
 
     final projects = await ProjectsRepository(db).watchProjects().first;

@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 
 import '../theme/app_theme.dart';
 import 'color_palette.dart';
@@ -101,9 +101,8 @@ class _Swatch extends StatelessWidget {
                   label,
                   textAlign: TextAlign.center,
                   maxLines: 2,
-                  style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontWeight: selected ? FontWeight.bold : null,
-                  ),
+                  style: Theme.of(context).textTheme.labelSmall
+                      ?.copyWith(fontWeight: selected ? FontWeight.bold : null),
                 ),
               ],
             ),

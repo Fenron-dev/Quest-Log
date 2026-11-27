@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -72,9 +72,9 @@ class WeekCloseScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final today = ref.watch(todayProvider);
     final monday = weekStart(today);
-    final days = [
-      for (var i = 0; i < 5; i++) monday.add(Duration(days: i)),
-    ].where((d) => !d.isAfter(today)).toList();
+    final days = [for (var i = 0; i < 5; i++) monday.add(Duration(days: i))]
+        .where((d) => !d.isAfter(today))
+        .toList();
     final reviews = ref.watch(taggedTasksProvider(reviewTimeTag)).value;
     final summaries = [for (final d in days) ref.watch(daySummaryProvider(d))];
     final gapDays = summaries.contains(null)
