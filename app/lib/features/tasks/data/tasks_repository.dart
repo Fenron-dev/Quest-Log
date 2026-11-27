@@ -227,6 +227,139 @@ class TasksRepository {
     return query.watch().map((rows) => rows.map(_toView).toList());
   }
 
+  static final _openNames = [
+    TaskStatus.inbox.name,
+    TaskStatus.planned.name,
+    TaskStatus.inProgress.name,
+    TaskStatus.blocked.name,
+  ];
+
+  /// Unsorted captures.
+  Stream<List<TaskView>> watchInbox() {
+    final query = _viewQuery()
+      ..where(_db.tasks.status.equals(TaskStatus.inbox.name));
+    return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
+  /// Open tasks planned before [today] that were left over.
+  Stream<List<TaskView>> watchOverdue(DateTime today) {
+    final t = _db.tasks;
+    final query = _viewQuery()
+      ..where(
+        t.status.isIn(_openNames) &
+            t.plannedDay.isSmallerThanValue(_dayOf(today)),
+      );
+    return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
+  /// Waiting tasks whose follow-up date has been reached.
+  Stream<List<TaskView>> watchFollowUpsDue(DateTime today) {
+    final t = _db.tasks;
+    final query = _viewQuery()
+      ..where(
+        t.status.equals(TaskStatus.waitingFor.name) &
+            t.followUpDate.isSmallerThanValue(
+              _dayOf(today).add(const Duration(days: 1)),
+            ),
+      );
+    return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
+  /// Open tasks planned on [day], in the user's order.
+  Stream<List<TaskView>> watchPlannedOn(DateTime day) {
+    final t = _db.tasks;
+    final from = _dayOf(day);
+    final query = _viewQuery()
+      ..where(
+        t.status.isIn(_openNames) &
+            t.plannedDay.isBiggerOrEqualValue(from) &
+            t.plannedDay.isSmallerThanValue(from.add(const Duration(days: 1))),
+      );
+    return query.watch().map(
+      (rows) => rows.map(_toView).toList()
+        ..sort((a, b) {
+          final o = a.task.order.compareTo(b.task.order);
+          return o != 0 ? o : a.task.plannedDay!.compareTo(b.task.plannedDay!);
+        }),
+    );
+  }
+
+  /// Tasks marked done on [day].
+  Stream<List<TaskView>> watchDoneOn(DateTime day) {
+    final t = _db.tasks;
+    final from = _dayOf(day);
+    final query = _viewQuery()
+      ..where(
+        t.status.equals(TaskStatus.done.name) &
+            t.updatedAt.isBiggerOrEqualValue(from) &
+            t.updatedAt.isSmallerThanValue(from.add(const Duration(days: 1))),
+      );
+    return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
+  /// Tasks (open or done) carrying [tag].
+  Stream<List<TaskView>> watchTagged(String tag) {
+    final t = _db.tasks;
+    final query = _viewQuery()
+      ..where(
+        t.status.isNotIn([TaskStatus.dropped.name]) &
+            t.tags.like('%${jsonEncode(tag)}%'),
+      );
+    return query.watch().map(
+      (rows) => rows.map(_toView).where((v) => v.tags.contains(tag)).toList(),
+    );
+  }
+
+  /// Plans a task for [day]. Appointments keep their time of day; inbox
+  /// items become planned.
+  Future<void> planFor(String taskId, DateTime day) async {
+    final task = await getTask(taskId);
+    if (task == null) return;
+    final keep = isAppointment(task)
+        ? Duration(
+            hours: task.plannedDay!.hour,
+            minutes: task.plannedDay!.minute,
+          )
+        : Duration.zero;
+    await saveTask(
+      TasksCompanion(
+        id: Value(taskId),
+        plannedDay: Value(_dayOf(day).add(keep)),
+        status: task.status == TaskStatus.inbox
+            ? const Value(TaskStatus.planned)
+            : const Value.absent(),
+      ),
+    );
+  }
+
+  /// Parks a task without a date.
+  Future<void> moveToSomeday(String taskId) => saveTask(
+    TasksCompanion(
+      id: Value(taskId),
+      status: const Value(TaskStatus.someday),
+      plannedDay: const Value(null),
+    ),
+  );
+
+  /// Stores the order of [orderedIds] (e.g. the plan for the day).
+  Future<void> setOrder(List<String> orderedIds) => _db.transaction(() async {
+    for (final (i, id) in orderedIds.indexed) {
+      await (_db.update(_db.tasks)..where((t) => t.id.equals(id))).write(
+        TasksCompanion(order: Value(i), updatedAt: Value(DateTime.now())),
+      );
+    }
+  });
+
+  Future<void> removeTag(String taskId, String tag) async {
+    final task = await getTask(taskId);
+    if (task == null) return;
+    await (_db.update(_db.tasks)..where((t) => t.id.equals(taskId))).write(
+      TasksCompanion(
+        tags: Value(encodeTags(decodeTags(task.tags).where((x) => x != tag))),
+      ),
+    );
+  }
+
   /// The next open task planned (or due) after [today].
   Stream<TaskView?> watchNextUp(DateTime today) {
     final t = _db.tasks;

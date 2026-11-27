@@ -636,6 +636,64 @@ class TimeRepository {
     );
   }
 
+  /// Rounded work units per project for entries in [from, to).
+  Stream<Map<String, int>> watchProjectAe(
+    DateTime from,
+    DateTime to, {
+    double backgroundWeight = 0.5,
+    int aeMinutes = 10,
+  }) {
+    final q = _entryQuery()..where(_overlaps(from, to));
+    return q.watch().map((rows) {
+      final all = rows.map(_toEntryView).toList();
+      final now = _now();
+      final alloc = allocate(
+        all.map((v) => v.toSpan(now)).toList(),
+        backgroundWeight: backgroundWeight,
+      );
+      final buckets = <String, Map<String, Duration>>{};
+      for (final v in all) {
+        final project = v.entry.projectId;
+        if (project == null) continue;
+        final key =
+            '${v.entry.taskId ?? v.entry.category}|${dayOf(v.entry.start)}';
+        final b = buckets.putIfAbsent(project, () => {});
+        b[key] =
+            (b[key] ?? Duration.zero) + (alloc[v.entry.id] ?? Duration.zero);
+      }
+      return {
+        for (final MapEntry(:key, :value) in buckets.entries)
+          key: roundedAeTotal(value.values, aeMinutes: aeMinutes),
+      };
+    });
+  }
+
+  /// Entries in [from, to) that crossed midnight or still run from an
+  /// earlier day – usually a forgotten timer.
+  Stream<List<EntryView>> watchOvernight(DateTime from, DateTime to) {
+    final q = _entryQuery()..where(_overlaps(from, to));
+    return q.watch().map((rows) {
+      final today = dayOf(_now());
+      return rows.map(_toEntryView).where((v) {
+        final start = dayOf(v.entry.start);
+        final end = v.entry.end;
+        if (end == null) return start.isBefore(today);
+        return dayOf(end.subtract(const Duration(microseconds: 1))) != start;
+      }).toList();
+    });
+  }
+
+  /// Marks all of a task's entries as (not) billable.
+  Future<void> setTaskBillable(String taskId, bool billable) =>
+      (_db.update(
+        _db.timeEntries,
+      )..where((e) => e.taskId.equals(taskId) & e.deletedAt.isNull())).write(
+        TimeEntriesCompanion(
+          billable: Value(billable),
+          updatedAt: Value(DateTime.now()),
+        ),
+      );
+
   (DateTime, DateTime) _monthRange(DateTime month) => (
     DateTime(month.year, month.month),
     DateTime(month.year, month.month + 1),
