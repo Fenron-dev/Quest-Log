@@ -2,6 +2,8 @@
     <!-- Reminders: show notifications and restore them after a reboot. -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+    <!-- Voice notes; requested only when the first recording starts. -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <application
         android:label="quest_log"
         android:name="${applicationName}"
