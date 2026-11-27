@@ -1,5 +1,7 @@
 import 'package:drift/drift.dart';
 
+import 'dart:convert';
+
 import 'app_database.dart';
 
 /// Inserts fictitious example records for trying out the app.
@@ -95,10 +97,85 @@ Future<void> insertSampleData(AppDatabase db) => db.transaction(() async {
     return id;
   }
 
-  Future<void> task(String title, String customerId) => db
-      .into(db.tasks)
+  Future<String> task(
+    String title, {
+    String? customerId,
+    String? projectId,
+    TaskStatus status = TaskStatus.planned,
+    bool important = false,
+    DateTime? plannedDay,
+    DateTime? due,
+    String? waitingFor,
+    DateTime? followUp,
+    TaskSource? source,
+    List<(String, bool, bool)> checklist = const [],
+  }) async {
+    final id =
+        (await db
+                .into(db.tasks)
+                .insertReturning(
+                  TasksCompanion.insert(
+                    title: title,
+                    customerId: Value(customerId),
+                    projectId: Value(projectId),
+                    status: Value(status),
+                    important: Value(important),
+                    plannedDay: Value(plannedDay),
+                    due: Value(due),
+                    waitingFor: Value(waitingFor),
+                    waitingSince: Value(
+                      waitingFor == null
+                          ? null
+                          : DateTime.now().subtract(const Duration(days: 3)),
+                    ),
+                    followUpDate: Value(followUp),
+                    source: Value(source),
+                  ),
+                ))
+            .id;
+    for (final (i, (label, required, done)) in checklist.indexed) {
+      await db
+          .into(db.checklistItems)
+          .insert(
+            ChecklistItemsCompanion.insert(
+              taskId: id,
+              label: label,
+              order: Value(i),
+              required: Value(required),
+              done: Value(done),
+            ),
+          );
+    }
+    return id;
+  }
+
+  Future<void> template(
+    String name,
+    String pattern, {
+    int? estimate,
+    int? flatRate,
+    int? target,
+    bool favorite = true,
+    List<(String, bool)> steps = const [],
+  }) => db
+      .into(db.templates)
       .insert(
-        TasksCompanion.insert(title: title, customerId: Value(customerId)),
+        TemplatesCompanion.insert(
+          name: name,
+          titlePattern: pattern,
+          estimate: Value(estimate),
+          flatRateAe: Value(flatRate),
+          targetMinutes: Value(target),
+          isFavorite: Value(favorite),
+          checklist: Value(
+            steps.isEmpty
+                ? null
+                : jsonEncode([
+                    for (final (label, required) in steps)
+                      {'label': label, 'required': required},
+                  ]),
+          ),
+        ),
       );
 
   final now = DateTime.now();
@@ -141,7 +218,7 @@ Future<void> insertSampleData(AppDatabase db) => db.transaction(() async {
   await contact(muster, 'Anna Beispiel', role: 'IT-Ansprechpartnerin');
   await contact(praxis, 'Dr. Demo', email: 'praxis@example.com');
 
-  await project(
+  final serverumzug = await project(
     'Serverumzug',
     customerId: beispiel,
     budget: 60,
@@ -186,6 +263,76 @@ Future<void> insertSampleData(AppDatabase db) => db.transaction(() async {
     status: ProjectStatus.planned,
   );
 
-  await task('Drucker im Empfang prüfen', beispiel);
-  await task('Lizenzen verlängern', kanzlei);
+  await template(
+    'Fernwartung',
+    'Fernwartung {kunde}',
+    estimate: 20,
+    steps: [('Problem aufnehmen', true), ('Lösung dokumentieren', true)],
+  );
+  await template(
+    'Neuer Arbeitsplatz',
+    'Neuer Arbeitsplatz – {kunde}',
+    estimate: 120,
+    flatRate: 12,
+    target: 120,
+    steps: [
+      ('Benutzerkonto anlegen', true),
+      ('Rechner einrichten', true),
+      ('Drucker verbinden', false),
+      ('Übergabe an Mitarbeiter', true),
+    ],
+  );
+  await template(
+    'Passwort zurücksetzen',
+    'Passwort zurücksetzen – {kunde}',
+    estimate: 10,
+    flatRate: 1,
+    target: 10,
+  );
+  await template(
+    'Monatliche Prüfung',
+    'Prüfung {kunde} {datum}',
+    favorite: false,
+    steps: [('Backups kontrollieren', true), ('Updates prüfen', false)],
+  );
+
+  await task(
+    'Drucker im Empfang prüfen',
+    customerId: beispiel,
+    status: TaskStatus.inProgress,
+    plannedDay: today,
+    source: TaskSource.phone,
+    checklist: [
+      ('Fehlermeldung notieren', true, true),
+      ('Treiber prüfen', false, false),
+      ('Testseite drucken', true, false),
+    ],
+  );
+  await task(
+    'Netzlaufwerke umziehen',
+    customerId: beispiel,
+    projectId: serverumzug,
+    important: true,
+    plannedDay: today,
+    due: today.add(const Duration(days: 7)),
+    checklist: [
+      ('Freigaben kopieren', true, false),
+      ('Berechtigungen prüfen', true, false),
+    ],
+  );
+  await task(
+    'Lizenzen verlängern',
+    customerId: kanzlei,
+    due: today.add(const Duration(days: 14)),
+    source: TaskSource.mail,
+  );
+  await task(
+    'Angebot für Access Points',
+    customerId: muster,
+    status: TaskStatus.waitingFor,
+    waitingFor: 'Großhändler',
+    followUp: today,
+  );
+  await task('Rückruf wegen Scanner', status: TaskStatus.inbox);
+  await task('Werkzeugkoffer auffüllen', status: TaskStatus.someday);
 });

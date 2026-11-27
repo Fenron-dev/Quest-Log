@@ -7,8 +7,12 @@ import '../../core/routing/router.dart';
 import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
+import '../../core/ui/text_prompt_dialog.dart';
 import 'data/projects_repository.dart';
 import 'project_tile.dart';
+import '../tasks/data/tasks_repository.dart';
+import '../tasks/quick_capture_sheet.dart';
+import '../tasks/task_widgets.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
@@ -35,38 +39,11 @@ class ProjectDetailScreen extends ConsumerWidget {
   }
 }
 
-Future<String?> _askText(BuildContext context, String title, String label) {
-  final controller = TextEditingController();
-  return showDialog<String>(
-    context: context,
-    builder: (context) {
-      void submit() {
-        final text = controller.text.trim();
-        Navigator.pop(context, text.isEmpty ? null : text);
-      }
-
-      return AlertDialog(
-        title: Text(title),
-        content: TextField(
-          controller: controller,
-          autofocus: true,
-          decoration: InputDecoration(
-            labelText: label,
-            border: const OutlineInputBorder(),
-          ),
-          onSubmitted: (_) => submit(),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Abbrechen'),
-          ),
-          FilledButton(onPressed: submit, child: const Text('Hinzufügen')),
-        ],
-      );
-    },
-  ).whenComplete(controller.dispose);
-}
+Future<String?> _askText(
+  BuildContext context,
+  String title,
+  String label,
+) async => (await showTextPrompt(context, title: title, label: label))?.text;
 
 class _ProjectDetail extends ConsumerWidget {
   const _ProjectDetail({required this.overview});
@@ -79,6 +56,13 @@ class _ProjectDetail extends ConsumerWidget {
     final repo = ref.read(projectsRepositoryProvider);
     final milestones = ref.watch(milestonesProvider(p.id));
     final criteria = ref.watch(criteriaProvider(p.id));
+    final tasks = ref.watch(
+      taskListProvider((
+        filter: TaskFilter.open,
+        customerId: null,
+        projectId: p.id,
+      )),
+    );
     final color = ColorPalette.resolve(overview.color);
     final textTheme = Theme.of(context).textTheme;
     final period = formatDateRange(p.start, p.due);
@@ -176,6 +160,34 @@ class _ProjectDetail extends ConsumerWidget {
                           key: ValueKey(m.id),
                           milestone: m,
                           index: i,
+                        ),
+                    ],
+                  ),
+          ),
+          SectionHeader(
+            'Offene Aufgaben',
+            trailing: IconButton(
+              tooltip: 'Aufgabe erfassen',
+              icon: const Icon(Icons.add_task),
+              onPressed: () => showQuickCapture(
+                context,
+                customerId: p.customerId,
+                projectId: p.id,
+              ),
+            ),
+          ),
+          tasks.when(
+            loading: () => const LinearProgressIndicator(),
+            error: (e, _) => Text('Fehler: $e'),
+            data: (list) => list.isEmpty
+                ? const ListTile(title: Text('Keine offenen Aufgaben'))
+                : Column(
+                    children: [
+                      for (final t in list)
+                        TaskListItem(
+                          t,
+                          key: ValueKey(t.task.id),
+                          showCustomer: false,
                         ),
                     ],
                   ),

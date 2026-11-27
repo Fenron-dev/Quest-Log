@@ -31,3 +31,15 @@ Future<void> closeTestApp(WidgetTester tester, AppDatabase db) async {
 
 Finder navItem(String label) =>
     find.descendant(of: find.byType(NavigationBar), matching: find.text(label));
+
+/// Lets pending database work finish that `pumpAndSettle` alone does not
+/// wait for: one-off reads from a query stream need real async time.
+Future<void> settleAsync(WidgetTester tester) async {
+  await tester.runAsync(
+    () => Future<void>.delayed(const Duration(milliseconds: 100)),
+  );
+  for (var i = 0; i < 5; i++) {
+    await tester.pump(const Duration(milliseconds: 50));
+  }
+  await tester.pumpAndSettle();
+}
