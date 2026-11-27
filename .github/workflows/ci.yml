@@ -11,9 +11,9 @@ permissions:
   contents: read
 
 env:
-  # Feste Flutter-Version, damit CI und lokale Prüfung übereinstimmen.
-  # Beim Update hier und lokal gemeinsam anheben.
-  FLUTTER_VERSION: "3.41.4"
+  # Feste Flutter-Version, damit jeder Lauf dasselbe SDK nutzt.
+  # Updates laufen nur über die CI (lokal kein Platz für ein zweites SDK).
+  FLUTTER_VERSION: "3.50.1"
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -99,6 +99,11 @@ jobs:
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
       - run: flutter test
+      # pubspec.lock wird nur hier aufgelöst, nicht lokal. Weicht sie ab,
+      # zeigt das Log die passende Fassung zum Übernehmen.
+      - name: pubspec.lock aktuell
+        shell: bash
+        run: git diff --exit-code -- pubspec.lock
 
   build-android:
     name: Android-APK bauen
