@@ -18,6 +18,8 @@ class ReminderSettings {
     this.endOfDayMin = 17 * 60,
     this.dayClose = true,
     this.weekClose = true,
+    this.morningPlan = true,
+    this.morningMin = 8 * 60,
   });
 
   final bool enabled;
@@ -41,6 +43,12 @@ class ReminderSettings {
   final bool dayClose;
   final bool weekClose;
 
+  /// Reminder for the morning planning on weekdays.
+  final bool morningPlan;
+
+  /// Time of the morning planning, minutes after midnight.
+  final int morningMin;
+
   ReminderSettings copyWith({
     bool? enabled,
     bool? appointments,
@@ -52,6 +60,8 @@ class ReminderSettings {
     int? endOfDayMin,
     bool? dayClose,
     bool? weekClose,
+    bool? morningPlan,
+    int? morningMin,
   }) => ReminderSettings(
     enabled: enabled ?? this.enabled,
     appointments: appointments ?? this.appointments,
@@ -63,6 +73,8 @@ class ReminderSettings {
     endOfDayMin: endOfDayMin ?? this.endOfDayMin,
     dayClose: dayClose ?? this.dayClose,
     weekClose: weekClose ?? this.weekClose,
+    morningPlan: morningPlan ?? this.morningPlan,
+    morningMin: morningMin ?? this.morningMin,
   );
 
   Map<String, Object> toJson() => {
@@ -76,6 +88,8 @@ class ReminderSettings {
     'endOfDayMin': endOfDayMin,
     'dayClose': dayClose,
     'weekClose': weekClose,
+    'morningPlan': morningPlan,
+    'morningMin': morningMin,
   };
 
   factory ReminderSettings.fromJson(Map<String, Object?> j) {
@@ -94,6 +108,8 @@ class ReminderSettings {
       endOfDayMin: i('endOfDayMin', d.endOfDayMin, 0, 24 * 60 - 1),
       dayClose: b('dayClose', d.dayClose),
       weekClose: b('weekClose', d.weekClose),
+      morningPlan: b('morningPlan', d.morningPlan),
+      morningMin: i('morningMin', d.morningMin, 0, 24 * 60 - 1),
     );
   }
 }
