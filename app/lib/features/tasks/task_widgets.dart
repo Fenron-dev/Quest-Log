@@ -130,15 +130,16 @@ class _TaskListItemState extends ConsumerState<TaskListItem> {
             ),
           ),
         ),
-        if (_expanded) _InlineChecklist(view: v),
+        if (_expanded) InlineChecklist(view: v),
         const Divider(height: 1),
       ],
     );
   }
 }
 
-class _InlineChecklist extends ConsumerWidget {
-  const _InlineChecklist({required this.view});
+/// Checklist for quick ticking plus links to details and completion.
+class InlineChecklist extends ConsumerWidget {
+  const InlineChecklist({super.key, required this.view});
 
   final TaskView view;
 
