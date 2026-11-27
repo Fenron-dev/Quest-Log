@@ -9,6 +9,7 @@ import '../../core/settings/view_settings.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_settings.dart';
 import '../templates/templates_screen.dart';
+import '../reminders/reminder_settings_section.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -83,6 +84,8 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 28),
           const _TimeSettingsSection(),
+          const SizedBox(height: 28),
+          const ReminderSettingsSection(),
           const SizedBox(height: 28),
           Text('Aufgaben', style: textTheme.titleMedium),
           ListTile(
