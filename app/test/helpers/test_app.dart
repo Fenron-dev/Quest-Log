@@ -4,7 +4,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quest_log/app.dart';
 import 'package:quest_log/core/database/app_database.dart';
 import 'package:quest_log/core/database/database_provider.dart';
+import 'package:quest_log/features/reminders/notification_service.dart';
+import 'package:quest_log/features/reminders/reminder_scheduler.dart';
 import 'package:quest_log/features/time/data/time_repository.dart';
+
+import 'fake_notifications.dart';
 
 /// Pumps the full app on [db] with a phone-sized viewport.
 Future<void> pumpTestApp(
@@ -12,6 +16,7 @@ Future<void> pumpTestApp(
   AppDatabase db, {
   DateTime? now,
   Stream<DateTime>? clock,
+  FakeNotificationService? notifications,
 }) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
@@ -24,6 +29,10 @@ Future<void> pumpTestApp(
         nowProvider.overrideWith(
           (ref) => clock ?? Stream.value(now ?? DateTime.now()),
         ),
+        notificationServiceProvider.overrideWithValue(
+          notifications ?? FakeNotificationService(),
+        ),
+        if (now != null) reminderClockProvider.overrideWithValue(() => now),
       ],
       child: const QuestLogApp(),
     ),

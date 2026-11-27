@@ -215,6 +215,18 @@ class TasksRepository {
     );
   }
 
+  /// Open tasks that can trigger a reminder: planned at a time or waiting
+  /// with a follow-up date.
+  Stream<List<TaskView>> watchReminderTasks() {
+    final t = _db.tasks;
+    final query = _viewQuery()
+      ..where(
+        t.status.isNotIn([TaskStatus.done.name, TaskStatus.dropped.name]) &
+            (t.plannedDay.isNotNull() | t.followUpDate.isNotNull()),
+      );
+    return query.watch().map((rows) => rows.map(_toView).toList());
+  }
+
   /// The next open task planned (or due) after [today].
   Stream<TaskView?> watchNextUp(DateTime today) {
     final t = _db.tasks;

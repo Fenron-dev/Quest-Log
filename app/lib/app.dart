@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'core/routing/router.dart';
 import 'core/theme/app_theme.dart';
 import 'core/theme/theme_settings.dart';
+import 'features/reminders/reminder_scheduler.dart';
 
 class QuestLogApp extends ConsumerWidget {
   const QuestLogApp({super.key});
@@ -22,6 +23,7 @@ class QuestLogApp extends ConsumerWidget {
       locale: const Locale('de'),
       supportedLocales: const [Locale('de')],
       localizationsDelegates: GlobalMaterialLocalizations.delegates,
+      builder: (context, child) => ReminderHost(child: child!),
     );
   }
 }
