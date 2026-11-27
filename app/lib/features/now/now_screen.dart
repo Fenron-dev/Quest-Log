@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../core/routing/router.dart';
+import '../../core/ui/empty_state.dart';
 
 class NowScreen extends StatelessWidget {
   const NowScreen({super.key});
@@ -19,7 +20,10 @@ class NowScreen extends StatelessWidget {
           ),
         ],
       ),
-      body: const SizedBox.expand(),
+      body: const EmptyState(
+        icon: Icons.bolt_outlined,
+        message: 'Diese Ansicht folgt mit der Zeiterfassung.',
+      ),
     );
   }
 }

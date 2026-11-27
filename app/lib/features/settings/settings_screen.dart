@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/database/database_provider.dart';
+import '../../core/database/sample_data.dart';
 import '../../core/theme/app_theme.dart';
 import '../../core/theme/theme_settings.dart';
 
@@ -46,6 +48,31 @@ class SettingsScreen extends ConsumerWidget {
                   onTap: () => notifier.setAccent(accent),
                 ),
             ],
+          ),
+          const SizedBox(height: 28),
+          Text('Daten', style: textTheme.titleMedium),
+          const SizedBox(height: 8),
+          OutlinedButton.icon(
+            icon: const Icon(Icons.auto_awesome_outlined),
+            label: const Text('Beispieldaten laden'),
+            onPressed: () async {
+              await insertSampleData(ref.read(databaseProvider));
+              if (!context.mounted) return;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text(
+                    'Beispieldaten geladen: Kunden und Projekte sind jetzt '
+                    'gefüllt.',
+                  ),
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Fügt erfundene Kunden, Kontakte und Projekte zum Ausprobieren '
+            'hinzu.',
+            style: textTheme.bodySmall,
           ),
         ],
       ),
