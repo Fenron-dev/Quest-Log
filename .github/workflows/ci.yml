@@ -67,7 +67,10 @@ jobs:
       - uses: actions/setup-go@d8cbb8045d7f43706b9177cceb36c1f91a6644d5 # v7.1.0
         with:
           go-version-file: server/go.mod
-          cache-dependency-path: server/go.sum
+          # go.sum entsteht erst mit der ersten Abhängigkeit.
+          cache-dependency-path: server/go.mod
+      - name: Formatierung
+        run: test -z "$(gofmt -l .)" || { gofmt -d .; exit 1; }
       - run: go vet ./...
       - run: go test -race ./...
       - run: go build ./...
