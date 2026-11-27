@@ -10,6 +10,11 @@ on:
 permissions:
   contents: read
 
+env:
+  # Feste Flutter-Version, damit CI und lokale Prüfung übereinstimmen.
+  # Beim Update hier und lokal gemeinsam anheben.
+  FLUTTER_VERSION: "3.41.4"
+
 concurrency:
   group: ci-${{ github.ref }}
   cancel-in-progress: true
@@ -79,10 +84,17 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          channel: stable
-          cache: true
+      # Flutter direkt aus dem offiziellen Repository statt über eine Action:
+      # subosito/flutter-action referenziert actions/cache per Tag, was die
+      # Action-Richtlinie des Repositorys ablehnt.
+      - name: Flutter ${{ env.FLUTTER_VERSION }} installieren
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - run: flutter --version
+        shell: bash
       - run: flutter pub get
       - run: dart format --output=none --set-exit-if-changed .
       - run: flutter analyze
@@ -104,10 +116,17 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          channel: stable
-          cache: true
+      # Flutter direkt aus dem offiziellen Repository statt über eine Action:
+      # subosito/flutter-action referenziert actions/cache per Tag, was die
+      # Action-Richtlinie des Repositorys ablehnt.
+      - name: Flutter ${{ env.FLUTTER_VERSION }} installieren
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - run: flutter --version
+        shell: bash
       - run: flutter pub get
       # Debug-Build zum Testen auf dem eigenen Gerät. Signierte Releases kommen
       # später über einen eigenen Workflow mit geschützter Umgebung "release".
@@ -147,10 +166,17 @@ jobs:
       - name: Linux-Abhängigkeiten
         if: matrix.target == 'linux'
         run: sudo apt-get update && sudo apt-get install -y ninja-build libgtk-3-dev
-      - uses: subosito/flutter-action@1a449444c387b1966244ae4d4f8c696479add0b2 # v2.23.0
-        with:
-          channel: stable
-          cache: true
+      # Flutter direkt aus dem offiziellen Repository statt über eine Action:
+      # subosito/flutter-action referenziert actions/cache per Tag, was die
+      # Action-Richtlinie des Repositorys ablehnt.
+      - name: Flutter ${{ env.FLUTTER_VERSION }} installieren
+        shell: bash
+        working-directory: ${{ runner.temp }}
+        run: |
+          git clone --depth 1 --branch "$FLUTTER_VERSION" https://github.com/flutter/flutter.git flutter
+          echo "$RUNNER_TEMP/flutter/bin" >> "$GITHUB_PATH"
+      - run: flutter --version
+        shell: bash
       - run: flutter pub get
       - run: flutter build ${{ matrix.target }} --release
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2

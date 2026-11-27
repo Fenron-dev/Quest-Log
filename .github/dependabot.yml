@@ -7,10 +7,11 @@ updates:
     groups:
       actions:
         patterns: ["*"]
-  # Sobald app/ und server/ existieren, hier ergänzen:
-  # - package-ecosystem: pub
-  #   directory: /app
-  #   schedule: { interval: weekly }
+  - package-ecosystem: pub
+    directory: /app
+    schedule:
+      interval: weekly
+  # Sobald server/ existiert, hier ergänzen:
   # - package-ecosystem: gomod
   #   directory: /server
   #   schedule: { interval: weekly }
