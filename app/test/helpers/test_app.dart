@@ -4,15 +4,24 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quest_log/app.dart';
 import 'package:quest_log/core/database/app_database.dart';
 import 'package:quest_log/core/database/database_provider.dart';
+import 'package:quest_log/features/time/data/time_repository.dart';
 
 /// Pumps the full app on [db] with a phone-sized viewport.
-Future<void> pumpTestApp(WidgetTester tester, AppDatabase db) async {
+Future<void> pumpTestApp(
+  WidgetTester tester,
+  AppDatabase db, {
+  DateTime? now,
+}) async {
   tester.view.physicalSize = const Size(1080, 2400);
   tester.view.devicePixelRatio = 2.5;
   addTearDown(tester.view.reset);
   await tester.pumpWidget(
     ProviderScope(
-      overrides: [databaseProvider.overrideWithValue(db)],
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        // A fixed clock: a periodic ticker would keep pumpAndSettle busy.
+        nowProvider.overrideWith((ref) => Stream.value(now ?? DateTime.now())),
+      ],
       child: const QuestLogApp(),
     ),
   );

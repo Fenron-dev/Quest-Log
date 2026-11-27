@@ -13,6 +13,7 @@ import 'project_tile.dart';
 import '../tasks/data/tasks_repository.dart';
 import '../tasks/quick_capture_sheet.dart';
 import '../tasks/task_widgets.dart';
+import '../notes/notes_section.dart';
 
 class ProjectDetailScreen extends ConsumerWidget {
   const ProjectDetailScreen({super.key, required this.projectId});
@@ -236,6 +237,7 @@ class _ProjectDetail extends ConsumerWidget {
                     ],
                   ),
           ),
+          NotesSection(type: NoteParentType.project, parentId: p.id),
         ],
       ),
     );

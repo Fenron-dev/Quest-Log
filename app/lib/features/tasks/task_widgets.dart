@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/database/app_database.dart';
 import '../../core/ui/color_palette.dart';
 import '../../core/ui/formatting.dart';
+import '../time/timer_widgets.dart';
 import 'data/tasks_repository.dart';
 import 'task_actions.dart';
 
@@ -124,7 +125,7 @@ class _TaskListItemState extends ConsumerState<TaskListItem> {
                     ),
                   ),
                 ),
-                _DoneButton(v),
+                if (closed) _DoneButton(v) else TimerButton(taskId: t.id),
               ],
             ),
           ),
@@ -164,10 +165,21 @@ class _InlineChecklist extends ConsumerWidget {
               title: Text(i.required ? '${i.label} (Pflicht)' : i.label),
               onChanged: (v) => repo.setChecklistDone(i, v ?? false),
             ),
-          TextButton.icon(
-            onPressed: () => openTask(context, view.task.id),
-            icon: const Icon(Icons.notes),
-            label: const Text('Details und Abschluss'),
+          Wrap(
+            spacing: 8,
+            children: [
+              TextButton.icon(
+                onPressed: () => openTask(context, view.task.id),
+                icon: const Icon(Icons.notes),
+                label: const Text('Notizen und Details'),
+              ),
+              if (!view.task.status.isClosed)
+                TextButton.icon(
+                  onPressed: () => completeTask(context, ref, view.task.id),
+                  icon: const Icon(Icons.check),
+                  label: const Text('Abschließen'),
+                ),
+            ],
           ),
         ],
       ),
@@ -177,16 +189,16 @@ class _InlineChecklist extends ConsumerWidget {
 
 /// Coloured tile for the two-column view. Tasks in progress are filled
 /// with their colour.
-class TaskTileCard extends StatelessWidget {
+class TaskTileCard extends ConsumerWidget {
   const TaskTileCard(this.view, {super.key});
 
   final TaskView view;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final t = view.task;
     final color = ColorPalette.resolve(view.color);
-    final active = t.status == TaskStatus.inProgress;
+    final active = ref.watch(runningTaskIdsProvider).contains(t.id);
     final scheme = Theme.of(context).colorScheme;
     final fg = active ? ColorPalette.onColor(color) : scheme.onSurface;
     final progress = view.checklistTotal == 0
@@ -197,7 +209,10 @@ class TaskTileCard extends StatelessWidget {
       color: active ? color : color.withValues(alpha: 0.10),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () => openTask(context, t.id),
+        onTap: t.status.isClosed
+            ? () => openTask(context, t.id)
+            : () => toggleTimer(context, ref, t.id, running: active),
+        onLongPress: () => openTask(context, t.id),
         child: Padding(
           padding: const EdgeInsets.all(12),
           child: Column(
@@ -216,10 +231,16 @@ class TaskTileCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
-                      active ? 'In Arbeit' : t.status.label,
+                      active ? 'Läuft' : t.status.label,
                       style: TextStyle(color: fg, fontSize: 12),
                     ),
                   ),
+                  if (!t.status.isClosed)
+                    Icon(
+                      active ? Icons.pause : Icons.play_arrow,
+                      size: 18,
+                      color: fg,
+                    ),
                   if (t.important)
                     Icon(
                       Icons.priority_high,

@@ -11,6 +11,7 @@ import '../projects/project_tile.dart';
 import '../tasks/data/tasks_repository.dart';
 import '../tasks/quick_capture_sheet.dart';
 import '../tasks/task_widgets.dart';
+import '../time/data/time_repository.dart';
 import 'contact_dialog.dart';
 import 'data/customers_repository.dart';
 
@@ -147,15 +148,8 @@ class _OverviewTab extends ConsumerWidget {
                 : 'Keine Adresse hinterlegt',
           ),
         ),
-        const SectionHeader('Kontingent'),
-        ListTile(
-          leading: const Icon(Icons.timelapse_outlined),
-          title: Text(
-            customer.contingentAePerMonth == null
-                ? 'Kein Kontingent'
-                : '${customer.contingentAePerMonth} AE pro Monat',
-          ),
-        ),
+        const SectionHeader('AE diesen Monat'),
+        _ContingentTile(customer: customer),
         SectionHeader(
           'Kontakte',
           trailing: IconButton(
@@ -278,6 +272,57 @@ class _TasksTab extends ConsumerWidget {
                 Padding(padding: const EdgeInsets.all(16), child: newButton),
               ],
             ),
+    );
+  }
+}
+
+class _ContingentTile extends ConsumerWidget {
+  const _ContingentTile({required this.customer});
+
+  final Customer customer;
+
+  /// Share of the contingent from which a warning is shown.
+  static const warnShare = 0.8;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final used = ref.watch(customerMonthAeProvider(customer.id)).value ?? 0;
+    final contingent = customer.contingentAePerMonth;
+    final scheme = Theme.of(context).colorScheme;
+    if (contingent == null || contingent <= 0) {
+      return ListTile(
+        leading: const Icon(Icons.timelapse_outlined),
+        title: Text('$used AE verbraucht'),
+        subtitle: const Text('Kein Kontingent hinterlegt'),
+      );
+    }
+    final share = used / contingent;
+    final warn = share >= warnShare;
+    return ListTile(
+      leading: Icon(
+        warn ? Icons.warning_amber : Icons.timelapse_outlined,
+        color: warn ? scheme.error : null,
+      ),
+      title: Text('$used von $contingent AE'),
+      subtitle: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const SizedBox(height: 6),
+          LinearProgressIndicator(
+            value: share.clamp(0, 1).toDouble(),
+            color: warn ? scheme.error : null,
+          ),
+          if (warn) ...[
+            const SizedBox(height: 4),
+            Text(
+              share >= 1
+                  ? 'Kontingent überschritten'
+                  : 'Kontingent fast aufgebraucht',
+              style: TextStyle(color: scheme.error),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }
