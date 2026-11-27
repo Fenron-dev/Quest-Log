@@ -110,6 +110,13 @@ jobs:
         if: ${{ !cancelled() }}
         shell: bash
         run: git diff --exit-code -- pubspec.lock
+      # Generierter Code (drift) muss zum Generator passen.
+      - name: Generierter Code aktuell
+        if: ${{ !cancelled() }}
+        shell: bash
+        run: |
+          dart run build_runner build --delete-conflicting-outputs
+          git diff --exit-code -- '*.g.dart'
 
   build-android:
     name: Android-APK bauen
