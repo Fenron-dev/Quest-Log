@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/database/app_database.dart';
@@ -224,13 +224,16 @@ class _FocusRowState extends ConsumerState<FocusRow> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         row,
-        Container(
-          margin: const EdgeInsets.only(top: 2),
-          decoration: BoxDecoration(
+        // Material (not a decorated box) so the checklist tiles show their
+        // ink on the card background.
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Material(
             color: scheme.surfaceContainer,
             borderRadius: BorderRadius.circular(14),
+            clipBehavior: Clip.antiAlias,
+            child: InlineChecklist(view: view),
           ),
-          child: InlineChecklist(view: view),
         ),
       ],
     );

@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart' show Value;
-import 'package:flutter/material.dart';
+import 'package:material_ui/material_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -142,10 +142,10 @@ class _MorningScreenState extends ConsumerState<MorningScreen> {
                   shrinkWrap: true,
                   physics: const NeverScrollableScrollPhysics(),
                   buildDefaultDragHandles: false,
-                  onReorder: (from, to) {
+                  onReorderItem: (from, to) {
                     final ids = ordered.map((v) => v.task.id).toList();
                     final id = ids.removeAt(from);
-                    ids.insert(to > from ? to - 1 : to, id);
+                    ids.insert(to, id);
                     setState(() => _order = ids);
                     repo.setOrder(ids);
                   },

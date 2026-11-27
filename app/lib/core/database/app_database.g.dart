@@ -11384,12 +11384,11 @@ class $$AppSettingsTableTableManager
               $$AppSettingsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$AppSettingsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<String> key = const Value.absent(),
-                Value<String> value = const Value.absent(),
-                Value<int> rowid = const Value.absent(),
-              }) => AppSettingsCompanion(key: key, value: value, rowid: rowid),
+          updateCompanionCallback: ({
+            Value<String> key = const Value.absent(),
+            Value<String> value = const Value.absent(),
+            Value<int> rowid = const Value.absent(),
+          }) => AppSettingsCompanion(key: key, value: value, rowid: rowid),
           createCompanionCallback:
               ({
                 required String key,
@@ -11425,24 +11424,22 @@ typedef $$AppSettingsTableProcessedTableManager =
       AppSetting,
       PrefetchHooks Function()
     >;
-typedef $$WorkspacesTableCreateCompanionBuilder =
-    WorkspacesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String name,
-      Value<int> rowid,
-    });
-typedef $$WorkspacesTableUpdateCompanionBuilder =
-    WorkspacesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> name,
-      Value<int> rowid,
-    });
+typedef $$WorkspacesTableCreateCompanionBuilder = WorkspacesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String name,
+  Value<int> rowid,
+});
+typedef $$WorkspacesTableUpdateCompanionBuilder = WorkspacesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> name,
+  Value<int> rowid,
+});
 
 class $$WorkspacesTableFilterComposer
     extends Composer<_$AppDatabase, $WorkspacesTable> {
@@ -11622,36 +11619,34 @@ typedef $$WorkspacesTableProcessedTableManager =
       Workspace,
       PrefetchHooks Function()
     >;
-typedef $$CustomersTableCreateCompanionBuilder =
-    CustomersCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String name,
-      Value<int?> color,
-      Value<String?> address,
-      Value<String?> notes,
-      Value<int?> itflowClientId,
-      Value<int?> contingentAePerMonth,
-      Value<bool> isFavorite,
-      Value<int> rowid,
-    });
-typedef $$CustomersTableUpdateCompanionBuilder =
-    CustomersCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> name,
-      Value<int?> color,
-      Value<String?> address,
-      Value<String?> notes,
-      Value<int?> itflowClientId,
-      Value<int?> contingentAePerMonth,
-      Value<bool> isFavorite,
-      Value<int> rowid,
-    });
+typedef $$CustomersTableCreateCompanionBuilder = CustomersCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String name,
+  Value<int?> color,
+  Value<String?> address,
+  Value<String?> notes,
+  Value<int?> itflowClientId,
+  Value<int?> contingentAePerMonth,
+  Value<bool> isFavorite,
+  Value<int> rowid,
+});
+typedef $$CustomersTableUpdateCompanionBuilder = CustomersCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> name,
+  Value<int?> color,
+  Value<String?> address,
+  Value<String?> notes,
+  Value<int?> itflowClientId,
+  Value<int?> contingentAePerMonth,
+  Value<bool> isFavorite,
+  Value<int> rowid,
+});
 
 final class $$CustomersTableReferences
     extends BaseReferences<_$AppDatabase, $CustomersTable, Customer> {
@@ -12525,32 +12520,30 @@ typedef $$CustomersTableProcessedTableManager =
         bool checkRoundResultsRefs,
       })
     >;
-typedef $$ContactsTableCreateCompanionBuilder =
-    ContactsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String customerId,
-      required String name,
-      Value<String?> role,
-      Value<String?> phone,
-      Value<String?> email,
-      Value<int> rowid,
-    });
-typedef $$ContactsTableUpdateCompanionBuilder =
-    ContactsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> customerId,
-      Value<String> name,
-      Value<String?> role,
-      Value<String?> phone,
-      Value<String?> email,
-      Value<int> rowid,
-    });
+typedef $$ContactsTableCreateCompanionBuilder = ContactsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String customerId,
+  required String name,
+  Value<String?> role,
+  Value<String?> phone,
+  Value<String?> email,
+  Value<int> rowid,
+});
+typedef $$ContactsTableUpdateCompanionBuilder = ContactsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> customerId,
+  Value<String> name,
+  Value<String?> role,
+  Value<String?> phone,
+  Value<String?> email,
+  Value<int> rowid,
+});
 
 final class $$ContactsTableReferences
     extends BaseReferences<_$AppDatabase, $ContactsTable, Contact> {
@@ -12880,17 +12873,15 @@ class $$ContactsTableTableManager
                     >
                   >(state) {
                     if (customerId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.customerId,
-                                referencedTable: $$ContactsTableReferences
-                                    ._customerIdTable(db),
-                                referencedColumn: $$ContactsTableReferences
-                                    ._customerIdTable(db)
-                                    .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.customerId,
+                        referencedTable: $$ContactsTableReferences
+                            ._customerIdTable(db),
+                        referencedColumn: $$ContactsTableReferences
+                            ._customerIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
@@ -12918,40 +12909,38 @@ typedef $$ContactsTableProcessedTableManager =
       Contact,
       PrefetchHooks Function({bool customerId})
     >;
-typedef $$ProjectsTableCreateCompanionBuilder =
-    ProjectsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String?> customerId,
-      required String name,
-      Value<int?> color,
-      Value<ProjectStatus> status,
-      Value<DateTime?> start,
-      Value<DateTime?> due,
-      Value<int?> budgetAe,
-      Value<int> warnPercent,
-      Value<int?> itflowProjectId,
-      Value<int> rowid,
-    });
-typedef $$ProjectsTableUpdateCompanionBuilder =
-    ProjectsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String?> customerId,
-      Value<String> name,
-      Value<int?> color,
-      Value<ProjectStatus> status,
-      Value<DateTime?> start,
-      Value<DateTime?> due,
-      Value<int?> budgetAe,
-      Value<int> warnPercent,
-      Value<int?> itflowProjectId,
-      Value<int> rowid,
-    });
+typedef $$ProjectsTableCreateCompanionBuilder = ProjectsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String?> customerId,
+  required String name,
+  Value<int?> color,
+  Value<ProjectStatus> status,
+  Value<DateTime?> start,
+  Value<DateTime?> due,
+  Value<int?> budgetAe,
+  Value<int> warnPercent,
+  Value<int?> itflowProjectId,
+  Value<int> rowid,
+});
+typedef $$ProjectsTableUpdateCompanionBuilder = ProjectsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String?> customerId,
+  Value<String> name,
+  Value<int?> color,
+  Value<ProjectStatus> status,
+  Value<DateTime?> start,
+  Value<DateTime?> due,
+  Value<int?> budgetAe,
+  Value<int> warnPercent,
+  Value<int?> itflowProjectId,
+  Value<int> rowid,
+});
 
 final class $$ProjectsTableReferences
     extends BaseReferences<_$AppDatabase, $ProjectsTable, Project> {
@@ -13645,17 +13634,15 @@ class $$ProjectsTableTableManager
                         >
                       >(state) {
                         if (customerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.customerId,
-                                    referencedTable: $$ProjectsTableReferences
-                                        ._customerIdTable(db),
-                                    referencedColumn: $$ProjectsTableReferences
-                                        ._customerIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.customerId,
+                            referencedTable: $$ProjectsTableReferences
+                                ._customerIdTable(db),
+                            referencedColumn: $$ProjectsTableReferences
+                                ._customerIdTable(db)
+                                .id,
+                          ) as T;
                         }
 
                         return state;
@@ -13774,30 +13761,28 @@ typedef $$ProjectsTableProcessedTableManager =
         bool timeEntriesRefs,
       })
     >;
-typedef $$MilestonesTableCreateCompanionBuilder =
-    MilestonesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String projectId,
-      required String title,
-      Value<int> order,
-      Value<MilestoneStatus> status,
-      Value<int> rowid,
-    });
-typedef $$MilestonesTableUpdateCompanionBuilder =
-    MilestonesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> projectId,
-      Value<String> title,
-      Value<int> order,
-      Value<MilestoneStatus> status,
-      Value<int> rowid,
-    });
+typedef $$MilestonesTableCreateCompanionBuilder = MilestonesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String projectId,
+  required String title,
+  Value<int> order,
+  Value<MilestoneStatus> status,
+  Value<int> rowid,
+});
+typedef $$MilestonesTableUpdateCompanionBuilder = MilestonesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> projectId,
+  Value<String> title,
+  Value<int> order,
+  Value<MilestoneStatus> status,
+  Value<int> rowid,
+});
 
 final class $$MilestonesTableReferences
     extends BaseReferences<_$AppDatabase, $MilestonesTable, Milestone> {
@@ -14180,17 +14165,15 @@ class $$MilestonesTableTableManager
                     >
                   >(state) {
                     if (projectId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.projectId,
-                                referencedTable: $$MilestonesTableReferences
-                                    ._projectIdTable(db),
-                                referencedColumn: $$MilestonesTableReferences
-                                    ._projectIdTable(db)
-                                    .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.projectId,
+                        referencedTable: $$MilestonesTableReferences
+                            ._projectIdTable(db),
+                        referencedColumn: $$MilestonesTableReferences
+                            ._projectIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
@@ -14236,28 +14219,26 @@ typedef $$MilestonesTableProcessedTableManager =
       Milestone,
       PrefetchHooks Function({bool projectId, bool tasksRefs})
     >;
-typedef $$CriteriaTableCreateCompanionBuilder =
-    CriteriaCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String projectId,
-      required String label,
-      Value<bool> done,
-      Value<int> rowid,
-    });
-typedef $$CriteriaTableUpdateCompanionBuilder =
-    CriteriaCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> projectId,
-      Value<String> label,
-      Value<bool> done,
-      Value<int> rowid,
-    });
+typedef $$CriteriaTableCreateCompanionBuilder = CriteriaCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String projectId,
+  required String label,
+  Value<bool> done,
+  Value<int> rowid,
+});
+typedef $$CriteriaTableUpdateCompanionBuilder = CriteriaCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> projectId,
+  Value<String> label,
+  Value<bool> done,
+  Value<int> rowid,
+});
 
 final class $$CriteriaTableReferences
     extends BaseReferences<_$AppDatabase, $CriteriaTable, Criterion> {
@@ -14553,17 +14534,15 @@ class $$CriteriaTableTableManager
                     >
                   >(state) {
                     if (projectId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.projectId,
-                                referencedTable: $$CriteriaTableReferences
-                                    ._projectIdTable(db),
-                                referencedColumn: $$CriteriaTableReferences
-                                    ._projectIdTable(db)
-                                    .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.projectId,
+                        referencedTable: $$CriteriaTableReferences
+                            ._projectIdTable(db),
+                        referencedColumn: $$CriteriaTableReferences
+                            ._projectIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
@@ -14591,30 +14570,28 @@ typedef $$CriteriaTableProcessedTableManager =
       Criterion,
       PrefetchHooks Function({bool projectId})
     >;
-typedef $$GoalsTableCreateCompanionBuilder =
-    GoalsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String title,
-      Value<String?> area,
-      Value<int?> weeklyInputTarget,
-      Value<GoalStatus> status,
-      Value<int> rowid,
-    });
-typedef $$GoalsTableUpdateCompanionBuilder =
-    GoalsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> title,
-      Value<String?> area,
-      Value<int?> weeklyInputTarget,
-      Value<GoalStatus> status,
-      Value<int> rowid,
-    });
+typedef $$GoalsTableCreateCompanionBuilder = GoalsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String title,
+  Value<String?> area,
+  Value<int?> weeklyInputTarget,
+  Value<GoalStatus> status,
+  Value<int> rowid,
+});
+typedef $$GoalsTableUpdateCompanionBuilder = GoalsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> title,
+  Value<String?> area,
+  Value<int?> weeklyInputTarget,
+  Value<GoalStatus> status,
+  Value<int> rowid,
+});
 
 final class $$GoalsTableReferences
     extends BaseReferences<_$AppDatabase, $GoalsTable, Goal> {
@@ -15033,26 +15010,24 @@ typedef $$GoalsTableProcessedTableManager =
       Goal,
       PrefetchHooks Function({bool tasksRefs, bool timeEntriesRefs})
     >;
-typedef $$HabitsTableCreateCompanionBuilder =
-    HabitsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String title,
-      Value<int> timesPerWeek,
-      Value<int> rowid,
-    });
-typedef $$HabitsTableUpdateCompanionBuilder =
-    HabitsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> title,
-      Value<int> timesPerWeek,
-      Value<int> rowid,
-    });
+typedef $$HabitsTableCreateCompanionBuilder = HabitsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String title,
+  Value<int> timesPerWeek,
+  Value<int> rowid,
+});
+typedef $$HabitsTableUpdateCompanionBuilder = HabitsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> title,
+  Value<int> timesPerWeek,
+  Value<int> rowid,
+});
 
 class $$HabitsTableFilterComposer
     extends Composer<_$AppDatabase, $HabitsTable> {
@@ -15248,40 +15223,38 @@ typedef $$HabitsTableProcessedTableManager =
       Habit,
       PrefetchHooks Function()
     >;
-typedef $$TemplatesTableCreateCompanionBuilder =
-    TemplatesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String name,
-      required String titlePattern,
-      Value<String?> fields,
-      Value<String?> checklist,
-      Value<String?> defaultCustomerId,
-      Value<int?> estimate,
-      Value<int?> flatRateAe,
-      Value<int?> targetMinutes,
-      Value<bool> isFavorite,
-      Value<int> rowid,
-    });
-typedef $$TemplatesTableUpdateCompanionBuilder =
-    TemplatesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> name,
-      Value<String> titlePattern,
-      Value<String?> fields,
-      Value<String?> checklist,
-      Value<String?> defaultCustomerId,
-      Value<int?> estimate,
-      Value<int?> flatRateAe,
-      Value<int?> targetMinutes,
-      Value<bool> isFavorite,
-      Value<int> rowid,
-    });
+typedef $$TemplatesTableCreateCompanionBuilder = TemplatesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String name,
+  required String titlePattern,
+  Value<String?> fields,
+  Value<String?> checklist,
+  Value<String?> defaultCustomerId,
+  Value<int?> estimate,
+  Value<int?> flatRateAe,
+  Value<int?> targetMinutes,
+  Value<bool> isFavorite,
+  Value<int> rowid,
+});
+typedef $$TemplatesTableUpdateCompanionBuilder = TemplatesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> name,
+  Value<String> titlePattern,
+  Value<String?> fields,
+  Value<String?> checklist,
+  Value<String?> defaultCustomerId,
+  Value<int?> estimate,
+  Value<int?> flatRateAe,
+  Value<int?> targetMinutes,
+  Value<bool> isFavorite,
+  Value<int> rowid,
+});
 
 final class $$TemplatesTableReferences
     extends BaseReferences<_$AppDatabase, $TemplatesTable, Template> {
@@ -15836,17 +15809,15 @@ class $$TemplatesTableTableManager
                         >
                       >(state) {
                         if (defaultCustomerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.defaultCustomerId,
-                                    referencedTable: $$TemplatesTableReferences
-                                        ._defaultCustomerIdTable(db),
-                                    referencedColumn: $$TemplatesTableReferences
-                                        ._defaultCustomerIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.defaultCustomerId,
+                            referencedTable: $$TemplatesTableReferences
+                                ._defaultCustomerIdTable(db),
+                            referencedColumn: $$TemplatesTableReferences
+                                ._defaultCustomerIdTable(db)
+                                .id,
+                          ) as T;
                         }
 
                         return state;
@@ -15921,60 +15892,58 @@ typedef $$TemplatesTableProcessedTableManager =
         bool checkRoundsRefs,
       })
     >;
-typedef $$TasksTableCreateCompanionBuilder =
-    TasksCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String title,
-      Value<TaskStatus> status,
-      Value<DateTime?> plannedDay,
-      Value<int> order,
-      Value<DateTime?> due,
-      Value<bool> important,
-      Value<int?> estimateMin,
-      Value<TaskSource?> source,
-      Value<String?> customerId,
-      Value<String?> projectId,
-      Value<String?> milestoneId,
-      Value<String?> goalId,
-      Value<String?> templateId,
-      Value<int?> itflowTicketId,
-      Value<String?> waitingFor,
-      Value<DateTime?> waitingSince,
-      Value<DateTime?> followUpDate,
-      Value<String?> recurrence,
-      Value<String?> tags,
-      Value<int> rowid,
-    });
-typedef $$TasksTableUpdateCompanionBuilder =
-    TasksCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> title,
-      Value<TaskStatus> status,
-      Value<DateTime?> plannedDay,
-      Value<int> order,
-      Value<DateTime?> due,
-      Value<bool> important,
-      Value<int?> estimateMin,
-      Value<TaskSource?> source,
-      Value<String?> customerId,
-      Value<String?> projectId,
-      Value<String?> milestoneId,
-      Value<String?> goalId,
-      Value<String?> templateId,
-      Value<int?> itflowTicketId,
-      Value<String?> waitingFor,
-      Value<DateTime?> waitingSince,
-      Value<DateTime?> followUpDate,
-      Value<String?> recurrence,
-      Value<String?> tags,
-      Value<int> rowid,
-    });
+typedef $$TasksTableCreateCompanionBuilder = TasksCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String title,
+  Value<TaskStatus> status,
+  Value<DateTime?> plannedDay,
+  Value<int> order,
+  Value<DateTime?> due,
+  Value<bool> important,
+  Value<int?> estimateMin,
+  Value<TaskSource?> source,
+  Value<String?> customerId,
+  Value<String?> projectId,
+  Value<String?> milestoneId,
+  Value<String?> goalId,
+  Value<String?> templateId,
+  Value<int?> itflowTicketId,
+  Value<String?> waitingFor,
+  Value<DateTime?> waitingSince,
+  Value<DateTime?> followUpDate,
+  Value<String?> recurrence,
+  Value<String?> tags,
+  Value<int> rowid,
+});
+typedef $$TasksTableUpdateCompanionBuilder = TasksCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> title,
+  Value<TaskStatus> status,
+  Value<DateTime?> plannedDay,
+  Value<int> order,
+  Value<DateTime?> due,
+  Value<bool> important,
+  Value<int?> estimateMin,
+  Value<TaskSource?> source,
+  Value<String?> customerId,
+  Value<String?> projectId,
+  Value<String?> milestoneId,
+  Value<String?> goalId,
+  Value<String?> templateId,
+  Value<int?> itflowTicketId,
+  Value<String?> waitingFor,
+  Value<DateTime?> waitingSince,
+  Value<DateTime?> followUpDate,
+  Value<String?> recurrence,
+  Value<String?> tags,
+  Value<int> rowid,
+});
 
 final class $$TasksTableReferences
     extends BaseReferences<_$AppDatabase, $TasksTable, Task> {
@@ -17074,69 +17043,59 @@ class $$TasksTableTableManager
                         >
                       >(state) {
                         if (customerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.customerId,
-                                    referencedTable: $$TasksTableReferences
-                                        ._customerIdTable(db),
-                                    referencedColumn: $$TasksTableReferences
-                                        ._customerIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.customerId,
+                            referencedTable: $$TasksTableReferences
+                                ._customerIdTable(db),
+                            referencedColumn: $$TasksTableReferences
+                                ._customerIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (projectId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.projectId,
-                                    referencedTable: $$TasksTableReferences
-                                        ._projectIdTable(db),
-                                    referencedColumn: $$TasksTableReferences
-                                        ._projectIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.projectId,
+                            referencedTable: $$TasksTableReferences
+                                ._projectIdTable(db),
+                            referencedColumn: $$TasksTableReferences
+                                ._projectIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (milestoneId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.milestoneId,
-                                    referencedTable: $$TasksTableReferences
-                                        ._milestoneIdTable(db),
-                                    referencedColumn: $$TasksTableReferences
-                                        ._milestoneIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.milestoneId,
+                            referencedTable: $$TasksTableReferences
+                                ._milestoneIdTable(db),
+                            referencedColumn: $$TasksTableReferences
+                                ._milestoneIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (goalId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.goalId,
-                                    referencedTable: $$TasksTableReferences
-                                        ._goalIdTable(db),
-                                    referencedColumn: $$TasksTableReferences
-                                        ._goalIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.goalId,
+                            referencedTable: $$TasksTableReferences
+                                ._goalIdTable(db),
+                            referencedColumn: $$TasksTableReferences
+                                ._goalIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (templateId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.templateId,
-                                    referencedTable: $$TasksTableReferences
-                                        ._templateIdTable(db),
-                                    referencedColumn: $$TasksTableReferences
-                                        ._templateIdTable(db)
-                                        .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.templateId,
+                            referencedTable: $$TasksTableReferences
+                                ._templateIdTable(db),
+                            referencedColumn: $$TasksTableReferences
+                                ._templateIdTable(db)
+                                .id,
+                          ) as T;
                         }
 
                         return state;
@@ -17613,18 +17572,15 @@ class $$ChecklistItemsTableTableManager
                     >
                   >(state) {
                     if (taskId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.taskId,
-                                referencedTable: $$ChecklistItemsTableReferences
-                                    ._taskIdTable(db),
-                                referencedColumn:
-                                    $$ChecklistItemsTableReferences
-                                        ._taskIdTable(db)
-                                        .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.taskId,
+                        referencedTable: $$ChecklistItemsTableReferences
+                            ._taskIdTable(db),
+                        referencedColumn: $$ChecklistItemsTableReferences
+                            ._taskIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
@@ -18452,64 +18408,48 @@ class $$TimeEntriesTableTableManager
                         >
                       >(state) {
                         if (customerId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.customerId,
-                                    referencedTable:
-                                        $$TimeEntriesTableReferences
-                                            ._customerIdTable(db),
-                                    referencedColumn:
-                                        $$TimeEntriesTableReferences
-                                            ._customerIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.customerId,
+                            referencedTable: $$TimeEntriesTableReferences
+                                ._customerIdTable(db),
+                            referencedColumn: $$TimeEntriesTableReferences
+                                ._customerIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (taskId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.taskId,
-                                    referencedTable:
-                                        $$TimeEntriesTableReferences
-                                            ._taskIdTable(db),
-                                    referencedColumn:
-                                        $$TimeEntriesTableReferences
-                                            ._taskIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.taskId,
+                            referencedTable: $$TimeEntriesTableReferences
+                                ._taskIdTable(db),
+                            referencedColumn: $$TimeEntriesTableReferences
+                                ._taskIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (projectId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.projectId,
-                                    referencedTable:
-                                        $$TimeEntriesTableReferences
-                                            ._projectIdTable(db),
-                                    referencedColumn:
-                                        $$TimeEntriesTableReferences
-                                            ._projectIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.projectId,
+                            referencedTable: $$TimeEntriesTableReferences
+                                ._projectIdTable(db),
+                            referencedColumn: $$TimeEntriesTableReferences
+                                ._projectIdTable(db)
+                                .id,
+                          ) as T;
                         }
                         if (goalId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.goalId,
-                                    referencedTable:
-                                        $$TimeEntriesTableReferences
-                                            ._goalIdTable(db),
-                                    referencedColumn:
-                                        $$TimeEntriesTableReferences
-                                            ._goalIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.goalId,
+                            referencedTable: $$TimeEntriesTableReferences
+                                ._goalIdTable(db),
+                            referencedColumn: $$TimeEntriesTableReferences
+                                ._goalIdTable(db)
+                                .id,
+                          ) as T;
                         }
 
                         return state;
@@ -18901,19 +18841,15 @@ class $$TimeEntryColleaguesTableTableManager
                     >
                   >(state) {
                     if (timeEntryId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.timeEntryId,
-                                referencedTable:
-                                    $$TimeEntryColleaguesTableReferences
-                                        ._timeEntryIdTable(db),
-                                referencedColumn:
-                                    $$TimeEntryColleaguesTableReferences
-                                        ._timeEntryIdTable(db)
-                                        .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.timeEntryId,
+                        referencedTable: $$TimeEntryColleaguesTableReferences
+                            ._timeEntryIdTable(db),
+                        referencedColumn: $$TimeEntryColleaguesTableReferences
+                            ._timeEntryIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
@@ -18941,30 +18877,28 @@ typedef $$TimeEntryColleaguesTableProcessedTableManager =
       TimeEntryColleague,
       PrefetchHooks Function({bool timeEntryId})
     >;
-typedef $$WorkClocksTableCreateCompanionBuilder =
-    WorkClocksCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required DateTime day,
-      required DateTime start,
-      Value<String?> pauses,
-      Value<DateTime?> end,
-      Value<int> rowid,
-    });
-typedef $$WorkClocksTableUpdateCompanionBuilder =
-    WorkClocksCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<DateTime> day,
-      Value<DateTime> start,
-      Value<String?> pauses,
-      Value<DateTime?> end,
-      Value<int> rowid,
-    });
+typedef $$WorkClocksTableCreateCompanionBuilder = WorkClocksCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required DateTime day,
+  required DateTime start,
+  Value<String?> pauses,
+  Value<DateTime?> end,
+  Value<int> rowid,
+});
+typedef $$WorkClocksTableUpdateCompanionBuilder = WorkClocksCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<DateTime> day,
+  Value<DateTime> start,
+  Value<String?> pauses,
+  Value<DateTime?> end,
+  Value<int> rowid,
+});
 
 class $$WorkClocksTableFilterComposer
     extends Composer<_$AppDatabase, $WorkClocksTable> {
@@ -19195,36 +19129,34 @@ typedef $$WorkClocksTableProcessedTableManager =
       WorkClock,
       PrefetchHooks Function()
     >;
-typedef $$NotesTableCreateCompanionBuilder =
-    NotesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required NoteParentType parentType,
-      required String parentId,
-      Value<NoteType> type,
-      Value<String?> body,
-      Value<String?> mediaPath,
-      Value<String?> transcript,
-      Value<bool> isSolution,
-      Value<int> rowid,
-    });
-typedef $$NotesTableUpdateCompanionBuilder =
-    NotesCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<NoteParentType> parentType,
-      Value<String> parentId,
-      Value<NoteType> type,
-      Value<String?> body,
-      Value<String?> mediaPath,
-      Value<String?> transcript,
-      Value<bool> isSolution,
-      Value<int> rowid,
-    });
+typedef $$NotesTableCreateCompanionBuilder = NotesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required NoteParentType parentType,
+  required String parentId,
+  Value<NoteType> type,
+  Value<String?> body,
+  Value<String?> mediaPath,
+  Value<String?> transcript,
+  Value<bool> isSolution,
+  Value<int> rowid,
+});
+typedef $$NotesTableUpdateCompanionBuilder = NotesCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<NoteParentType> parentType,
+  Value<String> parentId,
+  Value<NoteType> type,
+  Value<String?> body,
+  Value<String?> mediaPath,
+  Value<String?> transcript,
+  Value<bool> isSolution,
+  Value<int> rowid,
+});
 
 class $$NotesTableFilterComposer extends Composer<_$AppDatabase, $NotesTable> {
   $$NotesTableFilterComposer({
@@ -19511,34 +19443,32 @@ typedef $$NotesTableProcessedTableManager =
       Note,
       PrefetchHooks Function()
     >;
-typedef $$MaterialsTableCreateCompanionBuilder =
-    MaterialsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      required String taskId,
-      Value<int> quantity,
-      Value<String?> ean,
-      Value<String?> name,
-      Value<String?> photoPath,
-      Value<String?> note,
-      Value<int> rowid,
-    });
-typedef $$MaterialsTableUpdateCompanionBuilder =
-    MaterialsCompanion Function({
-      Value<String> id,
-      Value<DateTime> createdAt,
-      Value<DateTime> updatedAt,
-      Value<DateTime?> deletedAt,
-      Value<String> taskId,
-      Value<int> quantity,
-      Value<String?> ean,
-      Value<String?> name,
-      Value<String?> photoPath,
-      Value<String?> note,
-      Value<int> rowid,
-    });
+typedef $$MaterialsTableCreateCompanionBuilder = MaterialsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  required String taskId,
+  Value<int> quantity,
+  Value<String?> ean,
+  Value<String?> name,
+  Value<String?> photoPath,
+  Value<String?> note,
+  Value<int> rowid,
+});
+typedef $$MaterialsTableUpdateCompanionBuilder = MaterialsCompanion Function({
+  Value<String> id,
+  Value<DateTime> createdAt,
+  Value<DateTime> updatedAt,
+  Value<DateTime?> deletedAt,
+  Value<String> taskId,
+  Value<int> quantity,
+  Value<String?> ean,
+  Value<String?> name,
+  Value<String?> photoPath,
+  Value<String?> note,
+  Value<int> rowid,
+});
 
 final class $$MaterialsTableReferences
     extends BaseReferences<_$AppDatabase, $MaterialsTable, MaterialItem> {
@@ -19885,17 +19815,15 @@ class $$MaterialsTableTableManager
                     >
                   >(state) {
                     if (taskId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.taskId,
-                                referencedTable: $$MaterialsTableReferences
-                                    ._taskIdTable(db),
-                                referencedColumn: $$MaterialsTableReferences
-                                    ._taskIdTable(db)
-                                    .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.taskId,
+                        referencedTable: $$MaterialsTableReferences
+                            ._taskIdTable(db),
+                        referencedColumn: $$MaterialsTableReferences
+                            ._taskIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
@@ -20315,19 +20243,15 @@ class $$CheckRoundsTableTableManager
                         >
                       >(state) {
                         if (templateId) {
-                          state =
-                              state.withJoin(
-                                    currentTable: table,
-                                    currentColumn: table.templateId,
-                                    referencedTable:
-                                        $$CheckRoundsTableReferences
-                                            ._templateIdTable(db),
-                                    referencedColumn:
-                                        $$CheckRoundsTableReferences
-                                            ._templateIdTable(db)
-                                            .id,
-                                  )
-                                  as T;
+                          state = state.withJoin(
+                            currentTable: table,
+                            currentColumn: table.templateId,
+                            referencedTable: $$CheckRoundsTableReferences
+                                ._templateIdTable(db),
+                            referencedColumn: $$CheckRoundsTableReferences
+                                ._templateIdTable(db)
+                                .id,
+                          ) as T;
                         }
 
                         return state;
@@ -20802,34 +20726,26 @@ class $$CheckRoundResultsTableTableManager
                     >
                   >(state) {
                     if (checkRoundId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.checkRoundId,
-                                referencedTable:
-                                    $$CheckRoundResultsTableReferences
-                                        ._checkRoundIdTable(db),
-                                referencedColumn:
-                                    $$CheckRoundResultsTableReferences
-                                        ._checkRoundIdTable(db)
-                                        .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.checkRoundId,
+                        referencedTable: $$CheckRoundResultsTableReferences
+                            ._checkRoundIdTable(db),
+                        referencedColumn: $$CheckRoundResultsTableReferences
+                            ._checkRoundIdTable(db)
+                            .id,
+                      ) as T;
                     }
                     if (customerId) {
-                      state =
-                          state.withJoin(
-                                currentTable: table,
-                                currentColumn: table.customerId,
-                                referencedTable:
-                                    $$CheckRoundResultsTableReferences
-                                        ._customerIdTable(db),
-                                referencedColumn:
-                                    $$CheckRoundResultsTableReferences
-                                        ._customerIdTable(db)
-                                        .id,
-                              )
-                              as T;
+                      state = state.withJoin(
+                        currentTable: table,
+                        currentColumn: table.customerId,
+                        referencedTable: $$CheckRoundResultsTableReferences
+                            ._customerIdTable(db),
+                        referencedColumn: $$CheckRoundResultsTableReferences
+                            ._customerIdTable(db)
+                            .id,
+                      ) as T;
                     }
 
                     return state;
