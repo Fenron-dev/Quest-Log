@@ -11400,7 +11400,16 @@ class $$AppSettingsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$AppSettingsTable, AppSetting>(table),
+                  BaseReferences<_$AppDatabase, $AppSettingsTable, AppSetting>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -11598,7 +11607,16 @@ class $$WorkspacesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$WorkspacesTable, Workspace>(table),
+                  BaseReferences<_$AppDatabase, $WorkspacesTable, Workspace>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -12338,7 +12356,7 @@ class $$CustomersTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CustomersTable, Customer>(table),
                   $$CustomersTableReferences(db, table, e),
                 ),
               )
@@ -12366,10 +12384,11 @@ class $$CustomersTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (contactsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Customer,
                           $CustomersTable,
-                          Contact
+                          Contact,
+                          $ContactsTable
                         >(
                           currentTable: table,
                           referencedTable: $$CustomersTableReferences
@@ -12380,17 +12399,16 @@ class $$CustomersTableTableManager
                                 table,
                                 p0,
                               ).contactsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.customerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'customer_id',
                           typedResults: items,
                         ),
                       if (projectsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Customer,
                           $CustomersTable,
-                          Project
+                          Project,
+                          $ProjectsTable
                         >(
                           currentTable: table,
                           referencedTable: $$CustomersTableReferences
@@ -12401,17 +12419,16 @@ class $$CustomersTableTableManager
                                 table,
                                 p0,
                               ).projectsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.customerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'customer_id',
                           typedResults: items,
                         ),
                       if (templatesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Customer,
                           $CustomersTable,
-                          Template
+                          Template,
+                          $TemplatesTable
                         >(
                           currentTable: table,
                           referencedTable: $$CustomersTableReferences
@@ -12422,17 +12439,16 @@ class $$CustomersTableTableManager
                                 table,
                                 p0,
                               ).templatesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.defaultCustomerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'default_customer_id',
                           typedResults: items,
                         ),
                       if (tasksRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Customer,
                           $CustomersTable,
-                          Task
+                          Task,
+                          $TasksTable
                         >(
                           currentTable: table,
                           referencedTable: $$CustomersTableReferences
@@ -12443,17 +12459,16 @@ class $$CustomersTableTableManager
                                 table,
                                 p0,
                               ).tasksRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.customerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'customer_id',
                           typedResults: items,
                         ),
                       if (timeEntriesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Customer,
                           $CustomersTable,
-                          TimeEntry
+                          TimeEntry,
+                          $TimeEntriesTable
                         >(
                           currentTable: table,
                           referencedTable: $$CustomersTableReferences
@@ -12464,17 +12479,16 @@ class $$CustomersTableTableManager
                                 table,
                                 p0,
                               ).timeEntriesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.customerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'customer_id',
                           typedResults: items,
                         ),
                       if (checkRoundResultsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Customer,
                           $CustomersTable,
-                          CheckRoundResult
+                          CheckRoundResult,
+                          $CheckRoundResultsTable
                         >(
                           currentTable: table,
                           referencedTable: $$CustomersTableReferences
@@ -12485,10 +12499,8 @@ class $$CustomersTableTableManager
                                 table,
                                 p0,
                               ).checkRoundResultsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.customerId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'customer_id',
                           typedResults: items,
                         ),
                     ];
@@ -12847,7 +12859,7 @@ class $$ContactsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ContactsTable, Contact>(table),
                   $$ContactsTableReferences(db, table, e),
                 ),
               )
@@ -13596,7 +13608,7 @@ class $$ProjectsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ProjectsTable, Project>(table),
                   $$ProjectsTableReferences(db, table, e),
                 ),
               )
@@ -13650,10 +13662,11 @@ class $$ProjectsTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (milestonesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Project,
                           $ProjectsTable,
-                          Milestone
+                          Milestone,
+                          $MilestonesTable
                         >(
                           currentTable: table,
                           referencedTable: $$ProjectsTableReferences
@@ -13664,17 +13677,16 @@ class $$ProjectsTableTableManager
                                 table,
                                 p0,
                               ).milestonesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.projectId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'project_id',
                           typedResults: items,
                         ),
                       if (criteriaRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Project,
                           $ProjectsTable,
-                          Criterion
+                          Criterion,
+                          $CriteriaTable
                         >(
                           currentTable: table,
                           referencedTable: $$ProjectsTableReferences
@@ -13685,17 +13697,16 @@ class $$ProjectsTableTableManager
                                 table,
                                 p0,
                               ).criteriaRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.projectId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'project_id',
                           typedResults: items,
                         ),
                       if (tasksRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Project,
                           $ProjectsTable,
-                          Task
+                          Task,
+                          $TasksTable
                         >(
                           currentTable: table,
                           referencedTable: $$ProjectsTableReferences
@@ -13706,17 +13717,16 @@ class $$ProjectsTableTableManager
                                 table,
                                 p0,
                               ).tasksRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.projectId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'project_id',
                           typedResults: items,
                         ),
                       if (timeEntriesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Project,
                           $ProjectsTable,
-                          TimeEntry
+                          TimeEntry,
+                          $TimeEntriesTable
                         >(
                           currentTable: table,
                           referencedTable: $$ProjectsTableReferences
@@ -13727,10 +13737,8 @@ class $$ProjectsTableTableManager
                                 table,
                                 p0,
                               ).timeEntriesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.projectId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'project_id',
                           typedResults: items,
                         ),
                     ];
@@ -14139,7 +14147,7 @@ class $$MilestonesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MilestonesTable, Milestone>(table),
                   $$MilestonesTableReferences(db, table, e),
                 ),
               )
@@ -14181,20 +14189,19 @@ class $$MilestonesTableTableManager
               getPrefetchedDataCallback: (items) async {
                 return [
                   if (tasksRefs)
-                    await $_getPrefetchedData<
+                    await $_getPrefetchedDataByColumns<
                       Milestone,
                       $MilestonesTable,
-                      Task
+                      Task,
+                      $TasksTable
                     >(
                       currentTable: table,
                       referencedTable: $$MilestonesTableReferences
                           ._tasksRefsTable(db),
                       managerFromTypedResult: (p0) =>
                           $$MilestonesTableReferences(db, table, p0).tasksRefs,
-                      referencedItemsForCurrentItem: (item, referencedItems) =>
-                          referencedItems.where(
-                            (e) => e.milestoneId == item.id,
-                          ),
+                      currentColumn: 'id',
+                      referencedColumn: 'milestone_id',
                       typedResults: items,
                     ),
                 ];
@@ -14508,7 +14515,7 @@ class $$CriteriaTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CriteriaTable, Criterion>(table),
                   $$CriteriaTableReferences(db, table, e),
                 ),
               )
@@ -14943,8 +14950,10 @@ class $$GoalsTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$GoalsTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$GoalsTable, Goal>(table),
+                  $$GoalsTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -14959,20 +14968,28 @@ class $$GoalsTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (tasksRefs)
-                        await $_getPrefetchedData<Goal, $GoalsTable, Task>(
+                        await $_getPrefetchedDataByColumns<
+                          Goal,
+                          $GoalsTable,
+                          Task,
+                          $TasksTable
+                        >(
                           currentTable: table,
                           referencedTable: $$GoalsTableReferences
                               ._tasksRefsTable(db),
                           managerFromTypedResult: (p0) =>
                               $$GoalsTableReferences(db, table, p0).tasksRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.goalId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'goal_id',
                           typedResults: items,
                         ),
                       if (timeEntriesRefs)
-                        await $_getPrefetchedData<Goal, $GoalsTable, TimeEntry>(
+                        await $_getPrefetchedDataByColumns<
+                          Goal,
+                          $GoalsTable,
+                          TimeEntry,
+                          $TimeEntriesTable
+                        >(
                           currentTable: table,
                           referencedTable: $$GoalsTableReferences
                               ._timeEntriesRefsTable(db),
@@ -14982,10 +14999,8 @@ class $$GoalsTableTableManager
                                 table,
                                 p0,
                               ).timeEntriesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.goalId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'goal_id',
                           typedResults: items,
                         ),
                     ];
@@ -15202,7 +15217,16 @@ class $$HabitsTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$HabitsTable, Habit>(table),
+                  BaseReferences<_$AppDatabase, $HabitsTable, Habit>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -15775,7 +15799,7 @@ class $$TemplatesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$TemplatesTable, Template>(table),
                   $$TemplatesTableReferences(db, table, e),
                 ),
               )
@@ -15825,10 +15849,11 @@ class $$TemplatesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (tasksRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Template,
                           $TemplatesTable,
-                          Task
+                          Task,
+                          $TasksTable
                         >(
                           currentTable: table,
                           referencedTable: $$TemplatesTableReferences
@@ -15839,17 +15864,16 @@ class $$TemplatesTableTableManager
                                 table,
                                 p0,
                               ).tasksRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.templateId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'template_id',
                           typedResults: items,
                         ),
                       if (checkRoundsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Template,
                           $TemplatesTable,
-                          CheckRound
+                          CheckRound,
+                          $CheckRoundsTable
                         >(
                           currentTable: table,
                           referencedTable: $$TemplatesTableReferences
@@ -15860,10 +15884,8 @@ class $$TemplatesTableTableManager
                                 table,
                                 p0,
                               ).checkRoundsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.templateId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'template_id',
                           typedResults: items,
                         ),
                     ];
@@ -17004,8 +17026,10 @@ class $$TasksTableTableManager
               ),
           withReferenceMapper: (p0) => p0
               .map(
-                (e) =>
-                    (e.readTable(table), $$TasksTableReferences(db, table, e)),
+                (e) => (
+                  e.readTable<$TasksTable, Task>(table),
+                  $$TasksTableReferences(db, table, e),
+                ),
               )
               .toList(),
           prefetchHooksCallback:
@@ -17103,10 +17127,11 @@ class $$TasksTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (checklistItemsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Task,
                           $TasksTable,
-                          ChecklistItem
+                          ChecklistItem,
+                          $ChecklistItemsTable
                         >(
                           currentTable: table,
                           referencedTable: $$TasksTableReferences
@@ -17117,14 +17142,17 @@ class $$TasksTableTableManager
                                 table,
                                 p0,
                               ).checklistItemsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.taskId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'task_id',
                           typedResults: items,
                         ),
                       if (timeEntriesRefs)
-                        await $_getPrefetchedData<Task, $TasksTable, TimeEntry>(
+                        await $_getPrefetchedDataByColumns<
+                          Task,
+                          $TasksTable,
+                          TimeEntry,
+                          $TimeEntriesTable
+                        >(
                           currentTable: table,
                           referencedTable: $$TasksTableReferences
                               ._timeEntriesRefsTable(db),
@@ -17134,17 +17162,16 @@ class $$TasksTableTableManager
                                 table,
                                 p0,
                               ).timeEntriesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.taskId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'task_id',
                           typedResults: items,
                         ),
                       if (materialsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           Task,
                           $TasksTable,
-                          MaterialItem
+                          MaterialItem,
+                          $MaterialsTable
                         >(
                           currentTable: table,
                           referencedTable: $$TasksTableReferences
@@ -17155,10 +17182,8 @@ class $$TasksTableTableManager
                                 table,
                                 p0,
                               ).materialsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.taskId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'task_id',
                           typedResults: items,
                         ),
                     ];
@@ -17546,7 +17571,7 @@ class $$ChecklistItemsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$ChecklistItemsTable, ChecklistItem>(table),
                   $$ChecklistItemsTableReferences(db, table, e),
                 ),
               )
@@ -18373,7 +18398,7 @@ class $$TimeEntriesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$TimeEntriesTable, TimeEntry>(table),
                   $$TimeEntriesTableReferences(db, table, e),
                 ),
               )
@@ -18457,10 +18482,11 @@ class $$TimeEntriesTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (timeEntryColleaguesRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           TimeEntry,
                           $TimeEntriesTable,
-                          TimeEntryColleague
+                          TimeEntryColleague,
+                          $TimeEntryColleaguesTable
                         >(
                           currentTable: table,
                           referencedTable: $$TimeEntriesTableReferences
@@ -18471,10 +18497,8 @@ class $$TimeEntriesTableTableManager
                                 table,
                                 p0,
                               ).timeEntryColleaguesRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.timeEntryId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'time_entry_id',
                           typedResults: items,
                         ),
                     ];
@@ -18815,7 +18839,9 @@ class $$TimeEntryColleaguesTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$TimeEntryColleaguesTable, TimeEntryColleague>(
+                    table,
+                  ),
                   $$TimeEntryColleaguesTableReferences(db, table, e),
                 ),
               )
@@ -19108,7 +19134,16 @@ class $$WorkClocksTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$WorkClocksTable, WorkClock>(table),
+                  BaseReferences<_$AppDatabase, $WorkClocksTable, WorkClock>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -19422,7 +19457,16 @@ class $$NotesTableTableManager
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable<$NotesTable, Note>(table),
+                  BaseReferences<_$AppDatabase, $NotesTable, Note>(
+                    db,
+                    table,
+                    e,
+                  ),
+                ),
+              )
               .toList(),
           prefetchHooksCallback: null,
         ),
@@ -19789,7 +19833,7 @@ class $$MaterialsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$MaterialsTable, MaterialItem>(table),
                   $$MaterialsTableReferences(db, table, e),
                 ),
               )
@@ -20214,7 +20258,7 @@ class $$CheckRoundsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CheckRoundsTable, CheckRound>(table),
                   $$CheckRoundsTableReferences(db, table, e),
                 ),
               )
@@ -20259,10 +20303,11 @@ class $$CheckRoundsTableTableManager
                   getPrefetchedDataCallback: (items) async {
                     return [
                       if (checkRoundResultsRefs)
-                        await $_getPrefetchedData<
+                        await $_getPrefetchedDataByColumns<
                           CheckRound,
                           $CheckRoundsTable,
-                          CheckRoundResult
+                          CheckRoundResult,
+                          $CheckRoundResultsTable
                         >(
                           currentTable: table,
                           referencedTable: $$CheckRoundsTableReferences
@@ -20273,10 +20318,8 @@ class $$CheckRoundsTableTableManager
                                 table,
                                 p0,
                               ).checkRoundResultsRefs,
-                          referencedItemsForCurrentItem:
-                              (item, referencedItems) => referencedItems.where(
-                                (e) => e.checkRoundId == item.id,
-                              ),
+                          currentColumn: 'id',
+                          referencedColumn: 'check_round_id',
                           typedResults: items,
                         ),
                     ];
@@ -20700,7 +20743,7 @@ class $$CheckRoundResultsTableTableManager
           withReferenceMapper: (p0) => p0
               .map(
                 (e) => (
-                  e.readTable(table),
+                  e.readTable<$CheckRoundResultsTable, CheckRoundResult>(table),
                   $$CheckRoundResultsTableReferences(db, table, e),
                 ),
               )
