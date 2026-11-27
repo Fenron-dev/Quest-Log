@@ -96,12 +96,18 @@ jobs:
       - run: flutter --version
         shell: bash
       - run: flutter pub get
-      - run: dart format --output=none --set-exit-if-changed .
-      - run: flutter analyze
-      - run: flutter test
-      # pubspec.lock wird nur hier aufgelöst, nicht lokal. Weicht sie ab,
-      # zeigt das Log die passende Fassung zum Übernehmen.
+      # Die folgenden Prüfungen laufen auch nach einem Fehler weiter, damit ein
+      # Lauf alle Probleme zeigt. Abweichungen erscheinen als Diff im Log.
+      - name: Formatierung
+        shell: bash
+        run: dart format . && git diff --exit-code -- . ':!pubspec.lock'
+      - if: ${{ !cancelled() }}
+        run: flutter analyze
+      - if: ${{ !cancelled() }}
+        run: flutter test
+      # pubspec.lock wird nur hier aufgelöst, nicht lokal.
       - name: pubspec.lock aktuell
+        if: ${{ !cancelled() }}
         shell: bash
         run: git diff --exit-code -- pubspec.lock
 
