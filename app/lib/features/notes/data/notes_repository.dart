@@ -40,6 +40,29 @@ class NotesRepository {
         );
   }
 
+  /// Adds a photo, video, screenshot or voice note whose file lives in the
+  /// media store under [mediaName].
+  Future<void> addMedia(
+    NoteParentType parentType,
+    String parentId,
+    NoteType type,
+    String mediaName, {
+    String? body,
+  }) async {
+    assert(type != NoteType.text);
+    await _db
+        .into(_db.notes)
+        .insert(
+          NotesCompanion.insert(
+            parentType: parentType,
+            parentId: parentId,
+            type: Value(type),
+            mediaPath: Value(mediaName),
+            body: Value(body),
+          ),
+        );
+  }
+
   Future<void> setSolution(String id, bool isSolution) =>
       (_db.update(_db.notes)..where((n) => n.id.equals(id))).write(
         NotesCompanion(

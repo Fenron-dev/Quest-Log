@@ -5,6 +5,9 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:quest_log/core/backup/backup_crypto.dart';
 import 'package:quest_log/core/database/app_database.dart';
 import 'package:quest_log/features/backup/backup_files.dart';
+import 'package:quest_log/features/notes/media/media_store.dart';
+
+import '../helpers/fake_media.dart';
 
 import '../helpers/test_app.dart';
 import '../helpers/test_database.dart';
@@ -26,15 +29,18 @@ class FakeBackupFiles implements BackupFiles {
 void main() {
   late AppDatabase db;
   late FakeBackupFiles files;
+  late MediaStore media;
 
   setUp(() {
     db = createTestDatabase();
     files = FakeBackupFiles();
+    media = tempMediaStore();
   });
 
   Future<void> pump(WidgetTester tester) => pumpTestApp(
     tester,
     db,
+    media: media,
     overrides: [
       backupFilesProvider.overrideWithValue(files),
       backupKdfProvider.overrideWithValue(
@@ -66,6 +72,9 @@ void main() {
           .into(db.customers)
           .insert(CustomersCompanion.insert(name: 'Beispiel GmbH')),
     );
+    await tester.runAsync(
+      () async => (await media.file('foto-1.jpg')).writeAsBytes([5, 6, 7]),
+    );
     await pump(tester);
 
     await openData(tester, 'Jetzt sichern');
@@ -85,13 +94,13 @@ void main() {
       'geheim-123',
     );
     await tester.tap(find.text('Sichern'));
-    await settleAsync(tester);
-    await settleAsync(tester);
+    await settleUntil(tester, find.text('Sicherung gespeichert.'));
     expect(find.text('Sicherung gespeichert.'), findsOneWidget);
     final name = files.saved.keys.single;
     expect(name, endsWith('.qlbackup'));
 
-    // Data changes after the backup.
+    // Data and media change after the backup.
+    await tester.runAsync(() => media.delete('foto-1.jpg'));
     await tester.runAsync(
       () => db
           .into(db.customers)
@@ -120,15 +129,19 @@ void main() {
     await settleAsync(tester);
     await settleAsync(tester);
     expect(find.textContaining('1 Kunden'), findsOneWidget);
+    expect(find.textContaining('1 Mediendateien'), findsOneWidget);
     await tester.tap(find.text('Ersetzen'));
-    await settleAsync(tester);
-    await settleAsync(tester);
+    await settleUntil(tester, find.text('Sicherung wiederhergestellt.'));
     expect(find.text('Sicherung wiederhergestellt.'), findsOneWidget);
 
     final names = await tester.runAsync(
       () async => (await db.select(db.customers).get()).map((c) => c.name),
     );
     expect(names, ['Beispiel GmbH']);
+    final photo = await tester.runAsync(
+      () async => (await media.file('foto-1.jpg')).readAsBytes(),
+    );
+    expect(photo, [5, 6, 7]);
 
     await closeTestApp(tester, db);
   });

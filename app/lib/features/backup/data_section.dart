@@ -11,6 +11,7 @@ import '../../core/settings/time_settings.dart';
 import '../../core/settings/view_settings.dart';
 import '../../core/theme/theme_settings.dart';
 import '../../core/ui/formatting.dart';
+import '../notes/media/media_store.dart';
 import '../reminders/reminder_settings.dart';
 import '../time/gap_fill_sheet.dart' show formatTime;
 import 'backup_files.dart';
@@ -74,6 +75,7 @@ class DataSection extends ConsumerWidget {
     try {
       bytes = await _busy(context, 'Sicherung wird verschlüsselt …', () async {
         final snap = await dumpDatabase(db);
+        snap['media'] = await ref.read(mediaStoreProvider).exportAll();
         return run(() => encryptBackup(snap, password, kdf: kdf));
       });
     } on BackupException catch (e) {
@@ -116,6 +118,9 @@ class DataSection extends ConsumerWidget {
       return;
     }
     if (!context.mounted) return;
+    final media = snap is Map && snap['media'] is Map
+        ? (snap['media'] as Map).cast<String, Object?>()
+        : null;
     final when = info.createdAt;
     final ok = await showDialog<bool>(
       context: context,
@@ -127,7 +132,8 @@ class DataSection extends ConsumerWidget {
           '${info.count('customers')} Kunden · '
           '${info.count('projects')} Projekte · '
           '${info.count('tasks')} Aufgaben · '
-          '${info.count('time_entries')} Zeiteinträge\n\n'
+          '${info.count('time_entries')} Zeiteinträge'
+          '${media == null ? '' : ' · ${media.length} Mediendateien'}\n\n'
           'Alle Daten auf diesem Gerät werden dadurch ersetzt.',
         ),
         actions: [
@@ -144,11 +150,14 @@ class DataSection extends ConsumerWidget {
     );
     if (ok != true || !context.mounted) return;
     try {
-      await _busy(
-        context,
-        'Daten werden wiederhergestellt …',
-        () => restoreDatabase(db, snap),
-      );
+      await _busy(context, 'Daten werden wiederhergestellt …', () async {
+        // Check the media first so a bad file leaves everything as is.
+        final files = media == null ? null : MediaStore.decodeAll(media);
+        await restoreDatabase(db, snap);
+        if (files != null) {
+          await ref.read(mediaStoreProvider).replaceAll(files);
+        }
+      });
     } catch (_) {
       if (context.mounted) {
         _snack(
@@ -227,7 +236,10 @@ class DataSection extends ConsumerWidget {
           contentPadding: EdgeInsets.zero,
           leading: const Icon(Icons.lock_outline),
           title: const Text('Jetzt sichern'),
-          subtitle: const Text('Verschlüsselte Datei mit deinem Passwort'),
+          subtitle: const Text(
+            'Verschlüsselte Datei mit deinem Passwort, inklusive Fotos, '
+            'Videos und Sprachnotizen',
+          ),
           onTap: () => _backup(context, ref),
         ),
         ListTile(
