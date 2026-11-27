@@ -7,6 +7,7 @@ import '../../core/ui/color_palette.dart';
 import '../../core/ui/empty_state.dart';
 import '../../core/ui/formatting.dart';
 import '../now/now_day_header.dart';
+import '../routines/routine_widgets.dart';
 import '../tasks/appointment_sheet.dart';
 import '../tasks/data/tasks_repository.dart';
 import '../tasks/task_actions.dart';
@@ -134,6 +135,7 @@ class _MyDayScreenState extends ConsumerState<MyDayScreen> {
                       padding: const EdgeInsets.only(bottom: 32),
                       children: [
                         if (isToday) _ClockCard(summary: summary),
+                        if (isToday) RoutineChips(today: today),
                         Padding(
                           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
                           child: DayBar(

@@ -20,6 +20,7 @@ void main() {
     timerGuard: false,
     dayClose: false,
     weekClose: false,
+    morningPlan: false,
   );
 
   setUp(() {
@@ -107,6 +108,7 @@ void main() {
       enabled: true,
       dayClose: false,
       weekClose: false,
+      morningPlan: false,
     );
     final rs = await plan(s);
     final guard = rs.where((r) => r.key.startsWith('timer:')).toList();
@@ -120,7 +122,11 @@ void main() {
 
   test('day close on weekdays, week close on Friday', () async {
     final rs = await plan(
-      const ReminderSettings(enabled: true, timerGuard: false),
+      const ReminderSettings(
+        enabled: true,
+        timerGuard: false,
+        morningPlan: false,
+      ),
     );
     // Within 7 days of Mon 09:00: Mon–Thu, Fri (next Mon 17:00 is beyond).
     expect(rs.map((r) => (r.at.day, r.title)), [
@@ -131,6 +137,29 @@ void main() {
       (6, 'Wochenabschluss'),
     ]);
     expect(rs.every((r) => r.at.hour == 17), isTrue);
+    expect(rs.first.route, '/routine/day');
+    expect(rs[4].route, '/routine/week');
+  });
+
+  test('morning planning on the next weekday mornings', () async {
+    final rs = await plan(
+      const ReminderSettings(
+        enabled: true,
+        timerGuard: false,
+        dayClose: false,
+        weekClose: false,
+        morningMin: 7 * 60 + 30,
+      ),
+    );
+    // Monday 07:30 has passed (now is 09:00); Tue–Fri and next Monday.
+    expect(rs.map((r) => r.at), [
+      at(3, 7, 30),
+      at(4, 7, 30),
+      at(5, 7, 30),
+      at(6, 7, 30),
+      at(9, 7, 30),
+    ]);
+    expect(rs.first.route, '/routine/morning');
   });
 
   test('ids are stable and differ per key', () {

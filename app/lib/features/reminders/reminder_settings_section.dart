@@ -176,6 +176,35 @@ class ReminderSettingsSection extends ConsumerWidget {
             ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
+            title: const Text('Morgenplanung'),
+            subtitle: Text('Mo–Fr um ${_clock(s.morningMin)} Uhr'),
+            value: s.morningPlan,
+            onChanged: (v) => save(s.copyWith(morningPlan: v)),
+          ),
+          if (s.morningPlan)
+            ListTile(
+              contentPadding: const EdgeInsets.only(left: 16),
+              title: const Text('Uhrzeit'),
+              trailing: TextButton(
+                onPressed: () async {
+                  final picked = await showTimePicker(
+                    context: context,
+                    initialTime: TimeOfDay(
+                      hour: s.morningMin ~/ 60,
+                      minute: s.morningMin % 60,
+                    ),
+                  );
+                  if (picked != null) {
+                    save(
+                      s.copyWith(morningMin: picked.hour * 60 + picked.minute),
+                    );
+                  }
+                },
+                child: Text(_clock(s.morningMin)),
+              ),
+            ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
             title: const Text('Tagesabschluss'),
             subtitle: const Text('Mo–Do zum Feierabend'),
             value: s.dayClose,

@@ -16,6 +16,9 @@ import '../../features/tasks/tasks_screen.dart';
 import '../../features/templates/template_edit_screen.dart';
 import '../../features/templates/templates_screen.dart';
 import '../../features/time/start_screen.dart';
+import '../../features/routines/day_close_screen.dart';
+import '../../features/routines/morning_screen.dart';
+import '../../features/routines/week_close_screen.dart';
 import 'app_shell.dart';
 
 abstract final class AppRoutes {
@@ -25,6 +28,9 @@ abstract final class AppRoutes {
   static const projects = '/projects';
   static const customers = '/customers';
   static const settings = '/settings';
+  static const morning = '/routine/morning';
+  static const dayClose = '/routine/day';
+  static const weekClose = '/routine/week';
 }
 
 final routerProvider = Provider<GoRouter>((ref) => createRouter());
@@ -125,6 +131,18 @@ GoRouter createRouter({String initialLocation = AppRoutes.now}) {
             ],
           ),
         ],
+      ),
+      GoRoute(
+        path: AppRoutes.morning,
+        builder: (context, state) => const MorningScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.dayClose,
+        builder: (context, state) => const DayCloseScreen(),
+      ),
+      GoRoute(
+        path: AppRoutes.weekClose,
+        builder: (context, state) => const WeekCloseScreen(),
       ),
       GoRoute(
         path: '/task/:id',

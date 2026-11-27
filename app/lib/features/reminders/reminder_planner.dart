@@ -149,10 +149,21 @@ List<PlannedReminder> planReminders({
     }
   }
 
-  // Day / week close at the end of the next working days.
+  // Morning planning and day / week close on the next working days.
   for (var d = 0; d <= reminderHorizon.inDays; d++) {
     final day = _day(now).add(Duration(days: d));
     if (day.weekday > DateTime.friday) continue;
+    if (settings.morningPlan) {
+      add(
+        PlannedReminder(
+          key: 'morning:${day.toIso8601String()}',
+          at: day.add(Duration(minutes: settings.morningMin)),
+          title: 'Morgenplanung',
+          body: 'Eingang, Termine und Reihenfolge für heute',
+          route: AppRoutes.morning,
+        ),
+      );
+    }
     final at = day.add(Duration(minutes: settings.endOfDayMin));
     final friday = day.weekday == DateTime.friday;
     if (friday && settings.weekClose) {
@@ -162,7 +173,7 @@ List<PlannedReminder> planReminders({
           at: at,
           title: 'Wochenabschluss',
           body: 'Lücken, „Zeit prüfen“ und Kontingente durchsehen',
-          route: AppRoutes.myDay,
+          route: AppRoutes.weekClose,
         ),
       );
     } else if (settings.dayClose) {
@@ -172,7 +183,7 @@ List<PlannedReminder> planReminders({
           at: at,
           title: 'Tagesabschluss',
           body: 'Lücken zuordnen und offene Aufgaben verschieben',
-          route: AppRoutes.myDay,
+          route: AppRoutes.dayClose,
         ),
       );
     }
