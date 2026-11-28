@@ -1,8 +1,10 @@
 // Package itflow talks to the ITFlow API v1. The API key is only ever held
-// by the server and sent in the X-API-Key header, never in the URL.
+// by the server and sent in the X-API-Key header and the request body, never
+// in the URL.
 package itflow
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
@@ -105,11 +107,20 @@ func (c *Client) Do(ctx context.Context, method, module, function string, query 
 	if len(query) > 0 {
 		target += "?" + query.Encode()
 	}
-	req, err := http.NewRequestWithContext(ctx, method, target, nil)
+	// The key goes in the header and in a JSON body. Some web servers in
+	// front of ITFlow drop the header; ITFlow then reads the body, which,
+	// unlike the URL, does not end up in access logs. ITFlow parses the body
+	// for GET as well.
+	payload, err := json.Marshal(map[string]string{"api_key": c.key})
+	if err != nil {
+		return nil, err
+	}
+	req, err := http.NewRequestWithContext(ctx, method, target, bytes.NewReader(payload))
 	if err != nil {
 		return nil, err
 	}
 	req.Header.Set("X-API-Key", c.key)
+	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept", "application/json")
 	res, err := c.http.Do(req)
 	if err != nil {
