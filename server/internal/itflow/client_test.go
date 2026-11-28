@@ -19,7 +19,16 @@ func fakeITFlow(t *testing.T) *httptest.Server {
 		if r.URL.Query().Has("api_key") {
 			t.Errorf("api key must not be sent in the URL")
 		}
-		if r.Header.Get("X-API-Key") != testKey {
+		// Like ITFlow: header first, then the JSON body.
+		key := r.Header.Get("X-API-Key")
+		if key == "" {
+			var body struct {
+				APIKey string `json:"api_key"`
+			}
+			_ = json.NewDecoder(r.Body).Decode(&body)
+			key = body.APIKey
+		}
+		if key != testKey {
 			w.WriteHeader(http.StatusUnauthorized)
 			_ = json.NewEncoder(w).Encode(map[string]any{"success": "False", "message": "Authentication failed."})
 			return
@@ -93,6 +102,27 @@ func TestReadSendsKeyInHeaderAndParses(t *testing.T) {
 	}
 	if _, err := c.Read(context.Background(), "invoices", nil); !errors.Is(err, ErrNotFound) {
 		t.Fatalf("want ErrNotFound, got %v", err)
+	}
+}
+
+// stripHeader drops X-API-Key like some web servers in front of ITFlow do.
+type stripHeader struct{ next http.RoundTripper }
+
+func (s stripHeader) RoundTrip(r *http.Request) (*http.Response, error) {
+	r = r.Clone(r.Context())
+	r.Header.Del("X-API-Key")
+	return s.next.RoundTrip(r)
+}
+
+func TestReadWorksWhenHeaderIsDropped(t *testing.T) {
+	srv := fakeITFlow(t)
+	defer srv.Close()
+	hc := srv.Client()
+	hc.Transport = stripHeader{hc.Transport}
+	c, _ := New(srv.URL+"/itflow", testKey, hc)
+	res, err := c.Read(context.Background(), "clients", nil)
+	if err != nil || !res.Success {
+		t.Fatalf("read without header: %+v, %v", res, err)
 	}
 }
 
